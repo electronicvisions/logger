@@ -1,6 +1,7 @@
 // Singleton implementation of Debugger class for symap2ic project
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
-// 2010-02-26
+// by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
+// 2010-03-01
 
 
 #ifndef __LOGGER_H__
@@ -10,31 +11,36 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include <cstddef>
+#include <boost/shared_ptr.hpp>
 
 
 //! Singleton implementation of Debugger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
 Every further call returns a reference to this one class. The parameters loglevel and logfile can 
 not be changed after their first initialization. 
-Pre-defined logging levels are: fatal=0,verbose=5,debug=10. */
+Pre-defined logging levels are: FATAL=0,VERBOSE=5,DEBUG=10.
+Default log level ist DEBUG if you reference the the debugger wit no explicit log level */
 
+class LoggerSingleton;
 class LoggerSingleton
 {
 private:
-    unsigned int loglevel; 
-    std::string logfilename; 
-    std::ofstream *logfile;
-    std::ostringstream dummy;
-    static LoggerSingleton *log;
-    LoggerSingleton(unsigned int level, std::string filename)
+    size_t loglevel;
+    std::string logfilename;
+    std::fstream* logfile;
+	std::ostringstream deafStream;
+    static boost::shared_ptr<LoggerSingleton> log_ptr;
+    LoggerSingleton(size_t level, std::string filename)
     {
         logfile = 0;
         loglevel = level;
         logfilename = filename;
     }
-    LoggerSingleton(LoggerSingleton& ds)
+    LoggerSingleton(LoggerSingleton&) {}
+    bool belowThresh(size_t level)
     {
+        return level <= loglevel ? true : false;
     }
 
 public:
@@ -42,14 +48,18 @@ public:
     {
         if(logfile)
         {
-            if(logfile->is_open()) logfile->close();
+            if(logfile->is_open())
+			{
+				logfile->flush();
+				logfile->close();
+			}
             delete logfile;
         }
     }
     
-    enum levels {fatal=0,verbose=5,debug=10,all=99999};
+    enum levels {FATAL=0,VERBOSE=5,DEBUG=10,ALL=99999};
     
-    unsigned int * getLevel() { return &loglevel; }
+    size_t getLevel() { return loglevel; }
     
     //! tells if the passed logging level is below the logger's threshold
     bool willBeLogged(unsigned int level)
@@ -63,7 +73,7 @@ public:
     }
     std::string getFilename() { return logfilename; }
     
-    std::ostream & operator() (unsigned int level=fatal)
+    std::ostream& operator() (size_t level=DEBUG)
     {
         if(willBeLogged(level))
         {
@@ -72,40 +82,47 @@ public:
                 if(logfilename=="") return std::cout;
                 else
                 {
-                    logfile = new std::ofstream;
-                    logfile->open(logfilename.c_str(), std::ios::out);
+					// erase existing log file if necessary
+                    logfile = new std::fstream;
+                    logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
                     *logfile << "";
                     logfile->close();
-                    logfile->open(logfilename.c_str(), std::ios::app);
+
+					// open clean log file in append mode
+                    logfile->open(logfilename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
                 }
             }
             return *logfile;
         }
         else
         {
-            // make dummy string do nothing
-            dummy.clear(std::ios::failbit);
-            // provide dummy string, nothing will be done with it
-            return dummy;
+			// return deaf stream
+			deafStream.clear();
+            return deafStream;
         }
     }
-    
+
+	std::ostream& operator<< (std::string msg)
+	{
+		return (*this)(DEBUG) << msg;
+	}
+
     /*! This is the only way to create an instance of a LoggerSingleton. Only the first call actually creates an instance, 
     all further calls returns a reference to the one and only instance. */
     static LoggerSingleton& instance(
-        unsigned int level=fatal,         //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
+        size_t level=FATAL,         //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
         std::string filename=""   //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
     )
     {
-        if(!log) log = new LoggerSingleton(level, filename);
-        return *log;
+        if(!log_ptr) log_ptr = boost::shared_ptr<LoggerSingleton> (new LoggerSingleton(level, filename));
+        return *log_ptr;
     }
 };
 
 #ifndef PYTHONEXPOSED
 // Allocating and initializing LoggerSingleton's static data member.  
-// The pointer is allocated - not the object inself.
-LoggerSingleton *LoggerSingleton::log = 0;
+// The smart pointer is allocated - not the object inself.
+boost::shared_ptr<LoggerSingleton> LoggerSingleton::log_ptr;
 #endif //PYTHONEXPOSED
 
 #endif // __LOGGER_H__
