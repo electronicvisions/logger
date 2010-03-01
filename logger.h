@@ -2,13 +2,16 @@
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 // 2010-02-26
 
+
+#ifndef __LOGGER_H__
+#define __LOGGER_H__
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 
 
-typedef unsigned int uint;
 
 //! Singleton implementation of Debugger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
@@ -19,12 +22,12 @@ Pre-defined logging levels are: fatal=0,verbose=5,debug=10. */
 class LoggerSingleton
 {
 private:
-    uint loglevel; 
+    unsigned int loglevel; 
     std::string logfilename; 
     std::ofstream *logfile;
     std::ostringstream dummy;
     static LoggerSingleton *log;
-    LoggerSingleton(uint level, std::string filename)
+    LoggerSingleton(unsigned int level, std::string filename)
     {
         logfile = 0;
         loglevel = level;
@@ -32,10 +35,6 @@ private:
     }
     LoggerSingleton(LoggerSingleton& ds)
     {
-    }
-    bool belowThresh(uint level)
-    {
-        return (level <= loglevel);
     }
 
 public:
@@ -50,13 +49,23 @@ public:
     
     enum levels {fatal=0,verbose=5,debug=10,all=99999};
     
-    uint * getLevel() { return &loglevel; }
+    unsigned int * getLevel() { return &loglevel; }
     
+    //! tells if the passed logging level is below the logger's threshold
+    bool willBeLogged(unsigned int level)
+    {
+        return (level <= loglevel);
+    }
+    //! Identical to willBeLogged(), for backward compatibility. 
+    bool l(unsigned int level)
+    {
+        return willBeLogged(level);
+    }
     std::string getFilename() { return logfilename; }
     
-    std::ostream & operator() (uint level=fatal)
+    std::ostream & operator() (unsigned int level=fatal)
     {
-        if(belowThresh(level))
+        if(willBeLogged(level))
         {
             if(!logfile)
             {
@@ -84,7 +93,7 @@ public:
     /*! This is the only way to create an instance of a LoggerSingleton. Only the first call actually creates an instance, 
     all further calls returns a reference to the one and only instance. */
     static LoggerSingleton& instance(
-        uint level=fatal,         //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
+        unsigned int level=fatal,         //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
         std::string filename=""   //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
     )
     {
@@ -93,6 +102,10 @@ public:
     }
 };
 
+#ifndef PYTHONEXPOSED
 // Allocating and initializing LoggerSingleton's static data member.  
 // The pointer is allocated - not the object inself.
 LoggerSingleton *LoggerSingleton::log = 0;
+#endif //PYTHONEXPOSED
+
+#endif // __LOGGER_H__
