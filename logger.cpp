@@ -51,7 +51,7 @@ inline std::string Logger::getTime()
 inline std::string Logger::toString(size_t level)
 {
 	static const char* const buffer[] = { "ERROR: ",
-	                                      "WARNING: ",
+										  "WARNING: ",
 										  "INFO: ",
 										  "DEBUG: ",
 										  "DEBUG1: ",
