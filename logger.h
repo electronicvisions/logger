@@ -1,4 +1,4 @@
-// Singleton implementation of Debugger class for symap2ic project
+// Singleton implementation of Logger class for symap2ic project
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 // by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
 //
@@ -17,12 +17,12 @@
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
 
-//! Singleton implementation of Debugger class
+//! Singleton implementation of Logger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
-  Every further call returns a reference to this one class. The parameters loglevel and logfile can 
-  not be changed after their first initialization. 
-  Pre-defined logging levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
-  Default log level ist DEBUG if you reference the the debugger wit no explicit log level */
+  Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
+  parameters loglevel and logfile can not be changed after their first initialization. 
+  Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
+  In case you reference the the logger with no explicit criticality level, the default level is DEBUG. */
 class Logger
 {
 	private:
@@ -44,6 +44,9 @@ class Logger
 		std::ostream& getStdStream(size_t level);
 
 	public:
+		/*! The criticality levels of this logger class. 
+		  Messages streamed into the logger will only be recorded if their criticality is at least the 
+		  criticality level of the logger. */
 		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
 		~Logger();
@@ -132,7 +135,7 @@ inline std::string Logger::getTime()
 inline std::string Logger::toString(size_t level)
 {
 	static const char* const buffer[] = { "ERROR: ",
-	                                      "WARNING: ",
+										  "WARNING: ",
 										  "INFO: ",
 										  "DEBUG: ",
 										  "DEBUG1: ",
