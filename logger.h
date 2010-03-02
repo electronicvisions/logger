@@ -139,7 +139,6 @@ inline std::string Logger::toString(size_t level)
 										  "DEBUG2: ",
 										  "DEBUG3: "};
 	return buffer[level];
-										  //"\33[32mDEBUG1:\t",
 }
 
 inline std::string Logger::toColor(size_t level)
@@ -147,7 +146,7 @@ inline std::string Logger::toColor(size_t level)
 	switch(level) {
 		case ERROR:
 			return std::string("\33[31m");
-		case INFO:
+		case WARNING:
 			return std::string("\33[33m");
 		default:
 			return std::string("\33[32m");
