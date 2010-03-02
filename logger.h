@@ -1,6 +1,9 @@
 // Singleton implementation of Debugger class for symap2ic project
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 // by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
+//
+// IMMER LOGGER BLEIBEN!
+//
 // 2010-03-01
 
 
@@ -32,7 +35,6 @@ class Logger
 		Logger(size_t level, std::string filename);
 		Logger(Logger&);
 
-		bool belowThresh(size_t level);
 		std::string getTime();
 		std::string toString(size_t level);
 		std::string toColor(size_t level);
@@ -56,7 +58,7 @@ class Logger
 		size_t getLevel();
 		std::string getFilename();
 
-		//! tells if the passed logging level is below the logger's threshold
+		//! tells if the passed logging level is sufficient to pass the the logger's criticality threshold
 		bool willBeLogged(unsigned int level);
 
 		std::ostream& operator() (size_t level=DEBUG);
@@ -88,12 +90,6 @@ Logger::Logger(size_t level, std::string filename)
 }
 
 Logger::Logger(Logger&) {}
-
-bool Logger::belowThresh(size_t level)
-{
-	return level <= loglevel ? true : false;
-}
-
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 
