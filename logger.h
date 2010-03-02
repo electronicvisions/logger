@@ -14,15 +14,12 @@
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
 
-
 //! Singleton implementation of Debugger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
   Every further call returns a reference to this one class. The parameters loglevel and logfile can 
   not be changed after their first initialization. 
-  Pre-defined logging levels are: FATAL=0,VERBOSE=5,DEBUG=10.
+  Pre-defined logging levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
   Default log level ist DEBUG if you reference the the debugger wit no explicit log level */
-
-class Logger;
 class Logger
 {
 	private:
@@ -38,6 +35,11 @@ class Logger
 		bool belowThresh(size_t level);
 		std::string getTime();
 		std::string toString(size_t level);
+		std::string toColor(size_t level);
+		const std::string resetColor() const;
+
+		std::ostream& getFileStream(size_t level);
+		std::ostream& getStdStream(size_t level);
 
 	public:
 		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
@@ -101,7 +103,7 @@ inline std::string Logger::getTime()
 {
 	const int MAX_LEN = 200;
 	char buffer[MAX_LEN];
-	if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0, 
+	if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0,
 				"HH':'mm':'ss", buffer, MAX_LEN) == 0)
 		return "Error in NowTime()";
 
@@ -133,8 +135,48 @@ inline std::string Logger::getTime()
 
 inline std::string Logger::toString(size_t level)
 {
-	static const char* const buffer[] = {"ERROR:\t", "WARNING:\t", "INFO:\t", "DEBUG:\t", "DEBUG1:\t", "DEBUG2:\t", "DEBUG3:\t"};
+	static const char* const buffer[] = { "ERROR: ",
+	                                      "WARNING: ",
+										  "INFO: ",
+										  "DEBUG: ",
+										  "DEBUG1: ",
+										  "DEBUG2: ",
+										  "DEBUG3: "};
 	return buffer[level];
+										  //"\33[32mDEBUG1:\t",
+}
+
+inline std::string Logger::toColor(size_t level)
+{
+	switch(level) {
+		case ERROR:
+			return std::string("\33[31m");
+		case INFO:
+			return std::string("\33[33m");
+		default:
+			return std::string("\33[32m");
+	}
+}
+
+inline const std::string Logger::resetColor() const
+{
+	return std::string("\33[0m");
+}
+
+inline std::ostream& Logger::getFileStream(size_t level)
+{
+	*logfile << getTime();
+	logfile->width(10);
+	*logfile << std::left << toString(level);
+	return *logfile;
+}
+
+inline std::ostream& Logger::getStdStream(size_t level)
+{
+	std::cout << getTime() << toColor(level);
+	std::cout.width(10);
+	std::cout << std::left << toString(level) << resetColor();
+	return std::cout;
 }
 
 Logger::~Logger()
@@ -180,7 +222,7 @@ std::ostream& Logger::operator() (size_t level)
 	{
 		if(!logfile)
 		{
-			if(logfilename=="") return  std::cout << toString(level);
+			if(logfilename=="") return getStdStream(level);
 			else
 			{
 				// erase existing log file if necessary
@@ -193,7 +235,7 @@ std::ostream& Logger::operator() (size_t level)
 				logfile->open(logfilename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
 			}
 		}
-		return (*logfile << getTime() << toString(level));
+		return getFileStream(level);
 	}
 	else
 	{
