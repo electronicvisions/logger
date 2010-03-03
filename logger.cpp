@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <cassert>
 
 
 Logger::Logger(size_t level, std::string filename)
@@ -142,11 +143,13 @@ std::ostream& Logger::operator() (size_t level)
 				// erase existing log file if necessary
 				logfile = new std::fstream;
 				logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
+				assert(logfile->is_open());
 				*logfile << "";
 				logfile->close();
 
 				// open clean log file in append mode
 				logfile->open(logfilename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
+				assert(logfile->is_open());				
 			}
 		}
 		return getFileStream(level);
@@ -158,6 +161,8 @@ std::ostream& Logger::operator() (size_t level)
 		return deafStream;
 	}
 }
+
+void Logger::log(size_t level, std::string message) { (*this)(level) << message; }
 
 std::ostream& Logger::operator<<(std::basic_string<char> val)    { return (*this)() << val; }
 std::ostream& Logger::operator<<(std::ostringstream& val)        { return (*this)() << val; }

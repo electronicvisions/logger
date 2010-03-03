@@ -65,6 +65,9 @@ class Logger
 		bool willBeLogged(unsigned int level);
 
 		std::ostream& operator() (size_t level=DEBUG);
+        
+        //! 
+		void log(size_t level=DEBUG, std::string message=""); 
 
 		std::ostream& operator<<(std::basic_string<char> val);
 		std::ostream& operator<<(std::ostringstream& val);
