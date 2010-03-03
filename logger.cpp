@@ -162,8 +162,6 @@ std::ostream& Logger::operator() (size_t level)
 	}
 }
 
-void Logger::log(size_t level, std::string message) { (*this)(level) << message; }
-
 std::ostream& Logger::operator<<(std::basic_string<char> val)    { return (*this)() << val; }
 std::ostream& Logger::operator<<(std::ostringstream& val)        { return (*this)() << val; }
 std::ostream& Logger::operator<<(long val)                       { return (*this)() << val; }
