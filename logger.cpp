@@ -179,7 +179,7 @@ std::ofstream* Logger::logfile(NULL);
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
 
-void del_local_stream( std::ostringstream* stream )
+inline void del_local_stream( std::ostringstream* stream )
 {
 	Logger::getOutStream() << stream->str() << std::endl;
 	delete stream;

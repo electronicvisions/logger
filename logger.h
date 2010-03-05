@@ -67,7 +67,7 @@ class Logger
 		explicit Logger(size_t level, std::string filename);
 		Logger(Logger&);
 
-		//! Formatting the log messages
+		// Formatting the log messages
 		std::string getTime();
 		std::string toString(size_t level);
 		const char* toColor(size_t level) const;
