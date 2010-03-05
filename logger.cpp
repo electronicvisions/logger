@@ -1,24 +1,27 @@
 #include "logger.h"
-#include <cassert>
 
-Logger::Logger(size_t level, std::string filename) : logfile(NULL), logfilename(filename), loglevel(level)
+#ifdef MULTI_THREAD
+Logger::Logger(size_t level, std::string filename) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
+#else
+Logger::Logger(size_t level, std::string filename) : logfilename(filename), loglevel(level)
+#endif
+{
+	init();
+}
+
+void Logger::init()
 {
 	deafstream.setstate(std::ostream::badbit);
+	std::ostream* tmp = &std::cout;
 
-	if (filename != "")
+	if (logfilename != "")
 	{
-		// erase existing log file if necessary
-		logfile = new std::fstream;
-		logfile->open(filename.c_str(), (std::fstream::out | std::fstream::binary) );
+		logfile = new std::ofstream;
+		logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
 		assert(logfile->is_open());
-		*logfile << "";
-		logfile->close();
-
-		// open clean log file in append mode
-		logfile->open(filename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
-		assert(logfile->is_open());
+		tmp=logfile;
 	}
-	std::cout << "*** Started logging @" << getTime() << " ***" << std::endl;
+	*tmp << "*** Started logging @" << getTime() << " ***" << std::endl;
 }
 
 Logger::Logger(Logger&) {}
@@ -83,18 +86,27 @@ inline const char* Logger::resetColor() const
 	return COLOR_RESET;
 }
 
-inline std::ostream& Logger::getStream(std::ostream& stream, size_t level, bool color)
+inline std::ostream& Logger::getStream(size_t level)
 {
-	stream << getTime();
-	if (color) stream << toColor(level);
-	stream.width(10);
-	stream << std::left << toString(level);
-	if (color) stream << resetColor();
-	return stream;
+	*local_stream << getTime();
+	if (!logfile) *local_stream << toColor(level);
+	local_stream->width(10);
+	*local_stream << std::left << toString(level);
+	if (!logfile) *local_stream << resetColor();
+	return *local_stream;
+}
+
+inline std::ostream& Logger::getOutStream()
+{
+	if (logfile) return *logfile;
+	return std::cout;
 }
 
 Logger::~Logger()
 {
+#ifndef MULTI_THREAD
+	getOutStream() << local_stream->str();
+#endif
 	if(logfile)
 	{
 		if(logfile->is_open())
@@ -111,7 +123,9 @@ Logger::Logger& Logger::instance(
 		std::string filename      //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 		)
 {
+#ifdef MULTI_THREAD
 	boost::mutex::scoped_lock lock(init_mutex);
+#endif
 	if(!log_ptr)
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
@@ -139,7 +153,18 @@ std::ostream& Logger::operator() (size_t level)
 {
 	if(willBeLogged(level))
 	{
-		return logfile ? getStream(*logfile, level) : getStream(std::cout, level, true);
+#ifdef MULTI_THREAD
+		local_stream.reset( new std::ostringstream );
+#else
+		if (local_stream)
+		{
+			*local_stream << std::endl;
+			getOutStream() << local_stream->str();
+		}
+		delete local_stream;
+		local_stream = new std::ostringstream;
+#endif
+		return getStream(level);
 	}
 	else return deafstream;
 }
@@ -152,4 +177,14 @@ const char* const Logger::buffer[] = {
 // Allocating and initializing Logger's static data member.  
 // The smart pointer is allocated - not the object inself.
 boost::shared_ptr<Logger> Logger::log_ptr;
+std::ofstream* Logger::logfile(NULL);
+
+#ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
+#endif
+
+void del_local_stream( std::ostringstream* stream )
+{
+	Logger::getOutStream() << stream->str() << std::endl;
+	delete stream;
+}
