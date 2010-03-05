@@ -31,10 +31,11 @@
 #define COLOR_YELLOW    "\33[33m"
 #define COLOR_BLUE      "\33[34m"
 #define COLOR_PURPLE    "\33[35m"
-#define COLOR_MAGENTA   "\33[36m"
+#define COLOR_MARINE    "\33[36m"
 #define COLOR_GRAY      "\33[37m"
-
 #define COLOR_RESET     "\33[0m"
+
+// Formatting definitions
 #define COLOR_ERROR     COLOR_RED
 #define COLOR_WARNING   COLOR_YELLOW
 #define COLOR_DEFAULT   COLOR_GREEN
