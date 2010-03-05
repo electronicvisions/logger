@@ -3,13 +3,8 @@
 #ifdef MULTI_THREAD
 Logger::Logger(size_t level, std::string filename) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
 #else
-Logger::Logger(size_t level, std::string filename) : logfilename(filename), loglevel(level)
-#endif
-{
-	init();
-}
-
-void Logger::init()
+Logger::Logger(size_t level, std::string filename) : local_stream(NULL), logfilename(filename), loglevel(level)
+#endif // MULTI_THREAD
 {
 	deafstream.setstate(std::ostream::badbit);
 	std::ostream* tmp = &std::cout;
@@ -18,7 +13,8 @@ void Logger::init()
 	{
 		logfile = new std::ofstream;
 		logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
-		assert(logfile->is_open());
+		if (!logfile->is_open())
+			throw std::runtime_error("Logger ERROR: unable to open given logfile");
 		tmp=logfile;
 	}
 	*tmp << "*** Started logging @" << getTime() << " ***" << std::endl;
@@ -36,7 +32,7 @@ inline std::string Logger::getTime()
 	char buffer[MAX_LEN];
 	if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0,
 				"HH':'mm':'ss", buffer, MAX_LEN) == 0)
-		return "Error in NowTime()";
+		return "Error in Logger::getTime()";
 
 	char result[100] = {0};
 	static DWORD first = GetTickCount();
@@ -86,7 +82,7 @@ inline const char* Logger::resetColor() const
 	return COLOR_RESET;
 }
 
-inline std::ostream& Logger::getStream(size_t level)
+inline std::ostream& Logger::formatStream(size_t level)
 {
 	*local_stream << getTime();
 	if (!logfile) *local_stream << toColor(level);
@@ -106,7 +102,8 @@ Logger::~Logger()
 {
 #ifndef MULTI_THREAD
 	getOutStream() << local_stream->str();
-#endif
+	delete local_stream;
+#endif // MULTI_THREAD
 	if(logfile)
 	{
 		if(logfile->is_open())
@@ -125,7 +122,7 @@ Logger::Logger& Logger::instance(
 {
 #ifdef MULTI_THREAD
 	boost::mutex::scoped_lock lock(init_mutex);
-#endif
+#endif // MULTI_THREAD
 	if(!log_ptr)
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
@@ -144,7 +141,7 @@ inline std::string Logger::getFilename()
 	return logfilename;
 }
 
-inline bool Logger::willBeLogged(unsigned int level)
+inline bool Logger::willBeLogged(size_t level)
 {
 	return (level <= loglevel);
 }
@@ -163,8 +160,8 @@ std::ostream& Logger::operator() (size_t level)
 		}
 		delete local_stream;
 		local_stream = new std::ostringstream;
-#endif
-		return getStream(level);
+#endif // MULTI_THREAD
+		return formatStream(level);
 	}
 	else return deafstream;
 }
@@ -175,16 +172,16 @@ const char* const Logger::buffer[] = {
 	"DEBUG3: " };
 
 // Allocating and initializing Logger's static data member.  
-// The smart pointer is allocated - not the object inself.
+// The smart pointer is allocated - not the object itself.
 boost::shared_ptr<Logger> Logger::log_ptr;
 std::ofstream* Logger::logfile(NULL);
 
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
-#endif
 
 void del_local_stream( std::ostringstream* stream )
 {
 	Logger::getOutStream() << stream->str() << std::endl;
 	delete stream;
 }
+#endif // MULTI_THREAD

@@ -15,14 +15,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <cassert>
+#include <stdexcept>
 #include <boost/shared_ptr.hpp>
 
 #ifdef MULTI_THREAD
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
-#endif
+#endif // MULTI_THREAD
 
 // Color definitions
 #define COLOR_BLACK     "\33[30m"
@@ -44,7 +44,7 @@
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
   parameters loglevel and logfile can not be changed after their first initialization. 
   Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
-  In case you reference the the logger with no explicit criticality level, the default level is DEBUG. */
+  In case you reference the logger with no explicit criticality level, the default level is DEBUG. */
 class Logger
 {
 	private:
@@ -53,7 +53,7 @@ class Logger
 		static boost::mutex init_mutex;
 #else
 		std::ostringstream* local_stream;
-#endif
+#endif // MULTI_THREAD
 		static boost::shared_ptr<Logger> log_ptr;
 
 		static std::ofstream* logfile;
@@ -63,23 +63,26 @@ class Logger
 
 		explicit Logger(size_t level, std::string filename);
 		Logger(Logger&);
-		void init();
 
-		// formatting
+		//! Formatting the log messages
 		std::string getTime();
 		std::string toString(size_t level);
 		const char* toColor(size_t level) const;
 		const char* resetColor() const;
-
-		std::ostream& getStream(size_t level);
-		static std::ostream& getOutStream();
-
-		// pointer to function that takes an ostream and returns an ostream
-		typedef std::ostream& (*stream_manip)(std::ostream&);
-		// contains the criticality tags for stream formatting
+		std::ostream& formatStream(size_t level);
+		//! Contains the criticality tags for stream formatting
 		static const char* const buffer[];
 
+		//! Returns std::cout or ofstream reference depending on the chosen output method
+		static std::ostream& getOutStream();
+
+		//! typedef for pointer to function that takes an ostream and returns an ostream
+		typedef std::ostream& (*stream_manip)(std::ostream&);
+
+#ifdef MULTI_THREAD
+		//! Delegate destructor for local steams
 		friend void del_local_stream( std::ostringstream* );
+#endif // MULTI_THREAD
 
 	public:
 		/*! The criticality levels of this logger class. 
@@ -96,13 +99,16 @@ class Logger
 				std::string filename=""     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 				);
 
+		//! Returns threshold level of the Logger instance
 		size_t getLevel();
+
+		//! Returns filename of the output file
 		std::string getFilename();
 
-		//! tells if the passed logging level is sufficient to pass the the logger's criticality threshold
-		bool willBeLogged(unsigned int level);
+		//! Tells if the passed logging level is sufficient to pass the logger's criticality threshold
+		bool willBeLogged(size_t level);
 
-		//! get stream instance
+		//! Get stream instance
 		std::ostream& operator() (size_t level=DEBUG);
 
 		template <typename T>
@@ -111,12 +117,15 @@ class Logger
 				return *local_stream << val;
 			}
 
-		//! get stream instance for multi-line comments via stream operator
+		//! Get stream instance for multi-line comments via stream operator
 		std::ostream& operator<<(stream_manip manip) {
 			return manip((*this)());
 		}
 };
 
+#ifdef MULTI_THREAD
+//! Delegate destructor for local steams
 extern void del_local_stream( std::ostringstream* stream );
+#endif // MULTI_THREAD
 
 #endif // __LOGGER_H__
