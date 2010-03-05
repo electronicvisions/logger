@@ -144,7 +144,7 @@ inline std::string Logger::getFilename()
 	return logfilename;
 }
 
-inline bool Logger::willBeLogged(unsigned int level)
+inline bool Logger::willBeLogged(size_t level)
 {
 	return (level <= loglevel);
 }
