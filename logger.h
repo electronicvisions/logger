@@ -10,14 +10,19 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#define MULTI_THREAD
+
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <sstream>
+#include <cassert>
 #include <boost/shared_ptr.hpp>
+
+#ifdef MULTI_THREAD
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
+#endif
 
 // Color definitions
 #define COLOR_BLACK     "\33[30m"
@@ -34,7 +39,6 @@
 #define COLOR_WARNING   COLOR_YELLOW
 #define COLOR_DEFAULT   COLOR_GREEN
 
-
 //! Singleton implementation of Logger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
@@ -47,27 +51,38 @@
 class Logger
 {
 	private:
-		static boost::shared_ptr<Logger> log_ptr;
+#ifdef MULTI_THREAD
+		boost::thread_specific_ptr< std::ostringstream > local_stream;
 		static boost::mutex init_mutex;
+#else
+		std::ostringstream* local_stream;
+#endif
+		static boost::shared_ptr<Logger> log_ptr;
 
-		std::fstream* logfile;
+		static std::ofstream* logfile;
 		std::string logfilename;
 		size_t loglevel;
 		std::ostringstream deafstream;
 
 		explicit Logger(size_t level, std::string filename);
 		Logger(Logger&);
+		void init();
 
+		// formatting
 		std::string getTime();
 		std::string toString(size_t level);
 		const char* toColor(size_t level) const;
 		const char* resetColor() const;
 
-		std::ostream& getStream(std::ostream& stream, size_t level, bool color=false);
+		std::ostream& getStream(size_t level);
+		static std::ostream& getOutStream();
 
 		// pointer to function that takes an ostream and returns an ostream
 		typedef std::ostream& (*stream_manip)(std::ostream&);
+		// contains the criticality tags for stream formatting
 		static const char* const buffer[];
+
+		friend void del_local_stream( std::ostringstream* );
 
 	public:
 		/*! The criticality levels of this logger class. 
@@ -90,17 +105,21 @@ class Logger
 		//! tells if the passed logging level is sufficient to pass the the logger's criticality threshold
 		bool willBeLogged(unsigned int level);
 
+		//! get stream instance
 		std::ostream& operator() (size_t level=DEBUG);
 
 		template <typename T>
 			std::ostream& operator<<(const T& val)
 			{
-				return (*this)() << val;
+				return *local_stream << val;
 			}
 
+		//! get stream instance for multi-line comments via stream operator
 		std::ostream& operator<<(stream_manip manip) {
 			return manip((*this)());
 		}
 };
+
+extern void del_local_stream( std::ostringstream* stream );
 
 #endif // __LOGGER_H__
