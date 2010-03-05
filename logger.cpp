@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <cassert>
 
 Logger::Logger(size_t level, std::string filename) : logfile(NULL), logfilename(filename), loglevel(level)
 {
@@ -9,11 +10,13 @@ Logger::Logger(size_t level, std::string filename) : logfile(NULL), logfilename(
 		// erase existing log file if necessary
 		logfile = new std::fstream;
 		logfile->open(filename.c_str(), (std::fstream::out | std::fstream::binary) );
+		assert(logfile->is_open());
 		*logfile << "";
 		logfile->close();
 
 		// open clean log file in append mode
 		logfile->open(filename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
+		assert(logfile->is_open());
 	}
 	std::cout << "*** Started logging @" << getTime() << " ***" << std::endl;
 }
@@ -146,9 +149,7 @@ const char* const Logger::buffer[] = {
 	"DEBUG: ", "DEBUG1: ", "DEBUG2: ",
 	"DEBUG3: " };
 
-#ifndef PYTHONEXPOSED
 // Allocating and initializing Logger's static data member.  
 // The smart pointer is allocated - not the object inself.
 boost::shared_ptr<Logger> Logger::log_ptr;
 boost::mutex Logger::init_mutex;
-#endif //PYTHONEXPOSED
