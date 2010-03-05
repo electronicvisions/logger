@@ -44,7 +44,10 @@
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
   parameters loglevel and logfile can not be changed after their first initialization. 
   Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
-  In case you reference the logger with no explicit criticality level, the default level is DEBUG. */
+  The default criticality threshold of a logger is WARNING. If a message is streamed into the logger,
+  it will only be recorded if the criticality of the message is at least as high as the threshold of
+  the logger. In case you stream into a logger with no explicit criticality level, the default level of
+  your message is DEBUG. */
 class Logger
 {
 	private:
@@ -93,7 +96,7 @@ class Logger
 		~Logger();
 
 		/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance, 
-		  all further calls returns a reference to the one and only instance. */
+		  all further calls return a reference to the one and only instance. */
 		static Logger& instance(
 				size_t level=WARNING,       //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
 				std::string filename=""     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
