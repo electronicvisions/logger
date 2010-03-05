@@ -46,11 +46,11 @@ inline std::string Logger::getTime()
 
 inline std::string Logger::getTime()
 {
-	char buffer[11];
+	char buffer[20];
 	time_t t;
 	time(&t);
 	tm r;
-	strftime(buffer, sizeof(buffer), "%X", localtime_r(&t, &r));
+	strftime(buffer, sizeof(buffer), "%x %X", localtime_r(&t, &r));
 	struct timeval tv;
 	gettimeofday(&tv, 0);
 	char result[100] = {0};
