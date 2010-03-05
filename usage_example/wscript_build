@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+PWD=os.getcwd()
+
+usage_example = bld.new_task_gen(
+    features='cxx cprogram',
+    source='main.cpp',
+    target='logtest',
+    includes='../',
+    uselib='BOOST_THREAD',
+    uselib_local='logger',
+    install_path=PWD
+)
+
