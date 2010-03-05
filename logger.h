@@ -14,34 +14,58 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <cstddef>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/tss.hpp>
+
+// Color definitions
+#define COLOR_BLACK     "\33[30m"
+#define COLOR_RED       "\33[31m"
+#define COLOR_GREEN     "\33[32m"
+#define COLOR_YELLOW    "\33[33m"
+#define COLOR_BLUE      "\33[34m"
+#define COLOR_PURPLE    "\33[35m"
+#define COLOR_MAGENTA   "\33[36m"
+#define COLOR_GRAY      "\33[37m"
+
+#define COLOR_RESET     "\33[0m"
+#define COLOR_ERROR     COLOR_RED
+#define COLOR_WARNING   COLOR_YELLOW
+#define COLOR_DEFAULT   COLOR_GREEN
+
 
 //! Singleton implementation of Debugger class
-/*! Only one single instance of this class can be created by calling the public function instance(). 
+/*! Only one single instance of this class can be created bx the public function instance(). 
   Every further call returns a reference to this one class. The parameters loglevel and logfile can 
   not be changed after their first initialization. 
   Pre-defined logging levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
   Default log level ist DEBUG if you reference the the debugger wit no explicit log level */
+
 class Logger
 {
 	private:
-		size_t loglevel;
 		static boost::shared_ptr<Logger> log_ptr;
-		std::string logfilename;
-		std::fstream* logfile;
-		std::ostringstream deafStream;
+		static boost::mutex init_mutex;
 
-		Logger(size_t level, std::string filename);
+		std::fstream* logfile;
+		std::string logfilename;
+		size_t loglevel;
+		std::ostringstream deafstream;
+
+		explicit Logger(size_t level, std::string filename);
 		Logger(Logger&);
 
 		std::string getTime();
 		std::string toString(size_t level);
-		std::string toColor(size_t level);
-		const std::string resetColor() const;
+		const char* toColor(size_t level) const;
+		const char* resetColor() const;
 
-		std::ostream& getFileStream(size_t level);
-		std::ostream& getStdStream(size_t level);
+		std::ostream& getStream(std::ostream& stream, size_t level, bool color=false);
+
+		// pointer to function that takes an ostream and returns an ostream
+		typedef std::ostream& (*stream_manip)(std::ostream&);
+		static const char* const buffer[];
 
 	public:
 		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
@@ -63,22 +87,15 @@ class Logger
 
 		std::ostream& operator() (size_t level=DEBUG);
 
-		std::ostream& operator<<(std::basic_string<char> val);
-		std::ostream& operator<<(std::ostringstream& val);
-		std::ostream& operator<<(long val);
-		std::ostream& operator<<(unsigned long val);
-		std::ostream& operator<<(bool val);
-		std::ostream& operator<<(short val);
-		std::ostream& operator<<(unsigned short val);
-		std::ostream& operator<<(int val);
-		std::ostream& operator<<(unsigned int val);
-		std::ostream& operator<<(long long val);
-		std::ostream& operator<<(unsigned long long val);
-		std::ostream& operator<<(double val);
-		std::ostream& operator<<(float val);
-		std::ostream& operator<<(long double val);
-		std::ostream& operator<<(const char* val);
-		std::ostream& operator<<(const void* val);
+		template <typename T>
+			std::ostream& operator<<(const T& val)
+			{
+				return (*this)() << val;
+			}
+
+		std::ostream& operator<<(stream_manip manip) {
+			return manip((*this)());
+		}
 };
 
 #endif // __LOGGER_H__

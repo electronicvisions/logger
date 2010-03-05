@@ -1,11 +1,21 @@
 #include "logger.h"
 
-
-Logger::Logger(size_t level, std::string filename)
+Logger::Logger(size_t level, std::string filename) : logfile(NULL), logfilename(filename), loglevel(level)
 {
-	logfile = 0;
-	loglevel = level;
-	logfilename = filename;
+	deafstream.setstate(std::ostream::badbit);
+
+	if (filename != "")
+	{
+		// erase existing log file if necessary
+		logfile = new std::fstream;
+		logfile->open(filename.c_str(), (std::fstream::out | std::fstream::binary) );
+		*logfile << "";
+		logfile->close();
+
+		// open clean log file in append mode
+		logfile->open(filename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
+	}
+	std::cout << "*** Started logging @" << getTime() << " ***" << std::endl;
 }
 
 Logger::Logger(Logger&) {}
@@ -37,7 +47,7 @@ inline std::string Logger::getTime()
 	char buffer[11];
 	time_t t;
 	time(&t);
-	tm r = {0};
+	tm r;
 	strftime(buffer, sizeof(buffer), "%X", localtime_r(&t, &r));
 	struct timeval tv;
 	gettimeofday(&tv, 0);
@@ -50,47 +60,34 @@ inline std::string Logger::getTime()
 
 inline std::string Logger::toString(size_t level)
 {
-	static const char* const buffer[] = { "ERROR: ",
-	                                      "WARNING: ",
-										  "INFO: ",
-										  "DEBUG: ",
-										  "DEBUG1: ",
-										  "DEBUG2: ",
-										  "DEBUG3: "};
 	return buffer[level];
 }
 
-inline std::string Logger::toColor(size_t level)
+inline const char* Logger::toColor(size_t level) const
 {
 	switch(level) {
 		case ERROR:
-			return std::string("\33[31m");
+			return COLOR_ERROR;
 		case WARNING:
-			return std::string("\33[33m");
+			return COLOR_WARNING;
 		default:
-			return std::string("\33[32m");
+			return COLOR_DEFAULT;
 	}
 }
 
-inline const std::string Logger::resetColor() const
+inline const char* Logger::resetColor() const
 {
-	return std::string("\33[0m");
+	return COLOR_RESET;
 }
 
-inline std::ostream& Logger::getFileStream(size_t level)
+inline std::ostream& Logger::getStream(std::ostream& stream, size_t level, bool color)
 {
-	*logfile << getTime();
-	logfile->width(10);
-	*logfile << std::left << toString(level);
-	return *logfile;
-}
-
-inline std::ostream& Logger::getStdStream(size_t level)
-{
-	std::cout << getTime() << toColor(level);
-	std::cout.width(10);
-	std::cout << std::left << toString(level) << resetColor();
-	return std::cout;
+	stream << getTime();
+	if (color) stream << toColor(level);
+	stream.width(10);
+	stream << std::left << toString(level);
+	if (color) stream << resetColor();
+	return stream;
 }
 
 Logger::~Logger()
@@ -111,7 +108,12 @@ Logger::Logger& Logger::instance(
 		std::string filename      //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 		)
 {
-	if(!log_ptr) log_ptr = boost::shared_ptr<Logger> (new Logger(level, filename));
+	boost::mutex::scoped_lock lock(init_mutex);
+	if(!log_ptr)
+	{
+		if ( level > DEBUG3 ) level = DEBUG3;
+		log_ptr = boost::shared_ptr<Logger> (new Logger(level, filename));
+	}
 	return *log_ptr;
 }
 
@@ -134,50 +136,19 @@ std::ostream& Logger::operator() (size_t level)
 {
 	if(willBeLogged(level))
 	{
-		if(!logfile)
-		{
-			if(logfilename=="") return getStdStream(level);
-			else
-			{
-				// erase existing log file if necessary
-				logfile = new std::fstream;
-				logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
-				*logfile << "";
-				logfile->close();
-
-				// open clean log file in append mode
-				logfile->open(logfilename.c_str(), (std::fstream::app | std::fstream::out | std::fstream::binary) );
-			}
-		}
-		return getFileStream(level);
+		return logfile ? getStream(*logfile, level) : getStream(std::cout, level, true);
 	}
-	else
-	{
-		// return deaf stream
-		deafStream.clear();
-		return deafStream;
-	}
+	else return deafstream;
 }
 
-std::ostream& Logger::operator<<(std::basic_string<char> val)    { return (*this)() << val; }
-std::ostream& Logger::operator<<(std::ostringstream& val)        { return (*this)() << val; }
-std::ostream& Logger::operator<<(long val)                       { return (*this)() << val; }
-std::ostream& Logger::operator<<(unsigned long val)              { return (*this)() << val; }
-std::ostream& Logger::operator<<(bool val)                       { return (*this)() << val; }
-std::ostream& Logger::operator<<(short val)                      { return (*this)() << val; }
-std::ostream& Logger::operator<<(unsigned short val)             { return (*this)() << val; }
-std::ostream& Logger::operator<<(int val)                        { return (*this)() << val; }
-std::ostream& Logger::operator<<(unsigned int val)               { return (*this)() << val; }
-std::ostream& Logger::operator<<(long long val)                  { return (*this)() << val; }
-std::ostream& Logger::operator<<(unsigned long long val)         { return (*this)() << val; }
-std::ostream& Logger::operator<<(double val)                     { return (*this)() << val; }
-std::ostream& Logger::operator<<(float val)                      { return (*this)() << val; }
-std::ostream& Logger::operator<<(long double val)                { return (*this)() << val; }
-std::ostream& Logger::operator<<(const char* val)                { return (*this)() << val; }
-std::ostream& Logger::operator<<(const void* val)                { return (*this)() << val; }
+const char* const Logger::buffer[] = {
+	"ERROR: ", "WARNING: ", "INFO: ",
+	"DEBUG: ", "DEBUG1: ", "DEBUG2: ",
+	"DEBUG3: " };
 
 #ifndef PYTHONEXPOSED
 // Allocating and initializing Logger's static data member.  
 // The smart pointer is allocated - not the object inself.
 boost::shared_ptr<Logger> Logger::log_ptr;
+boost::mutex Logger::init_mutex;
 #endif //PYTHONEXPOSED
