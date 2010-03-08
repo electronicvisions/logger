@@ -85,10 +85,14 @@ inline const char* Logger::resetColor() const
 inline std::ostream& Logger::formatStream(size_t level)
 {
 	*local_stream << getTime();
+#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	if (!logfile) *local_stream << toColor(level);
+#endif //WIN32
 	local_stream->width(10);
 	*local_stream << std::left << toString(level);
+#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	if (!logfile) *local_stream << resetColor();
+#endif //WIN32
 	return *local_stream;
 }
 
