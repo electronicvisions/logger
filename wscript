@@ -1,7 +1,16 @@
 #!/usr/bin/env python
-
 import os
-PWD=os.getcwd()
+
+APPNAME='logger'
+
+
+# We have to set our build root to symap2ic.
+srcdir = os.environ['SYMAP2IC_PATH']
+
+
+def set_options(opt):
+    opt.tool_options('compiler_cc')
+    opt.tool_options('compiler_cxx')
 
 
 def configure(conf):
@@ -15,7 +24,8 @@ def build(bld):
         features='cxx cstaticlib',
         source='logger.cpp',
         target='logger',
-        install_path=PWD,
+        install_path=None,
+        cxxflags = ['-fPIC']#, '-DPIC']
     )
 
     bld.add_subdirs('usage_example')
