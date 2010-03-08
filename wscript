@@ -3,8 +3,6 @@
 import os
 PWD=os.getcwd()
 
-def set_options(opt):
-    opt.tool_options('compiler_cxx')
 
 def configure(conf):
     conf.check_tool('compiler_cxx')
