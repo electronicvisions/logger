@@ -92,13 +92,13 @@ class Logger
 		/*! The criticality levels of this logger class. 
 		  Messages streamed into the logger will only be recorded if their criticality is at least the 
 		  criticality level of the logger. */
+
+		// necessary to avoid collisions between Logger::DEBUG and use of -DDEBUG or #define DEBUG
 #ifdef DEBUG
 #undef DEBUG
-		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
-#define DEBUG
-#else
-		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
+#define DEBUG DEBUG
 #endif
+		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
 		~Logger();
 
