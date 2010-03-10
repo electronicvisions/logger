@@ -2,7 +2,7 @@
 import os
 
 APPNAME='logger'
-
+srcdir = '.'
 
 # We have to set our build root to symap2ic.
 srcdir = os.environ['SYMAP2IC_PATH']
