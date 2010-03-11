@@ -33,6 +33,8 @@ def configure(conf):
             raise
     check_boost_thread()
 
+    conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
+
 
 def build(bld):
     bld.new_task_gen(
@@ -40,7 +42,7 @@ def build(bld):
         source='logger.cpp',
         target='logger',
         install_path=None,
-        cxxflags = ['-fPIC']#, '-DPIC']
+        uselib = ['LOGGER']
     )
 
     bld.add_subdirs('usage_example')
