@@ -44,11 +44,11 @@
 /*! Only one single instance of this class can be created by calling the public function instance(). 
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
   parameters loglevel and logfile can not be changed after their first initialization. 
-  Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3.
+  Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG0, DEBUG1, DEBUG2, DEBUG3.
   The default criticality threshold of a logger is WARNING. If a message is streamed into the logger,
   it will only be recorded if the criticality of the message is at least as high as the threshold of
   the logger. In case you stream into a logger with no explicit criticality level, the default level of
-  your message is DEBUG. */
+  your message is DEBUG0. */
 class Logger
 {
 	private:
@@ -89,18 +89,13 @@ class Logger
 #endif // MULTI_THREAD
 
 	public:
+		~Logger();
+
 		/*! The criticality levels of this logger class. 
 		  Messages streamed into the logger will only be recorded if their criticality is at least the 
 		  criticality level of the logger. */
+		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
-		// necessary to avoid collisions between Logger::DEBUG and use of -DDEBUG or #define DEBUG
-#ifdef DEBUG
-#undef DEBUG
-#define DEBUG DEBUG
-#endif
-		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
-
-		~Logger();
 
 		/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance, 
 		  all further calls return a reference to the one and only instance. */
@@ -119,7 +114,7 @@ class Logger
 		bool willBeLogged(size_t level);
 
 		//! Get stream instance
-		std::ostream& operator() (size_t level=DEBUG);
+		std::ostream& operator() (size_t level=DEBUG0);
 
 		template <typename T>
 			std::ostream& operator<<(const T& val)
