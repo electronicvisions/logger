@@ -107,7 +107,9 @@ Logger::~Logger()
 #ifndef MULTI_THREAD
 	getOutStream() << local_stream->str();
 	delete local_stream;
-	local_stream = 0;
+	local_stream = NULL;
+#else
+	local_stream.reset( NULL );
 #endif // MULTI_THREAD
 	if(logfile)
 	{
@@ -174,7 +176,7 @@ std::ostream& Logger::operator() (size_t level)
 
 const char* const Logger::buffer[] = {
 	"ERROR: ", "WARNING: ", "INFO: ",
-	"DEBUG: ", "DEBUG1: ", "DEBUG2: ",
+	"DEBUG0: ", "DEBUG1: ", "DEBUG2: ",
 	"DEBUG3: " };
 
 // Allocating and initializing Logger's static data member.  

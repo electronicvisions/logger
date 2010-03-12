@@ -10,7 +10,7 @@ int main()
 	// messages are auto-endlined. Therefore you don't need to stream a std::endl
     Logger& log = Logger::instance(Logger::INFO, "");
 
-    log(Logger::DEBUG) << "This message won't be recorded by the logger, since its criticality level (DEBUG) is too low.";
+    log(Logger::DEBUG0) << "This message won't be recorded by the logger, since its criticality level (DEBUG0) is too low.";
     log(Logger::INFO) << "IMMER LOGGER BLEIBEN!";
     other();
     log(Logger::WARNING) << "Something might have gone wrong.";
