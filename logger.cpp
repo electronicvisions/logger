@@ -107,6 +107,7 @@ Logger::~Logger()
 #ifndef MULTI_THREAD
 	getOutStream() << local_stream->str();
 	delete local_stream;
+	local_stream = 0;
 #endif // MULTI_THREAD
 	if(logfile)
 	{
@@ -116,6 +117,7 @@ Logger::~Logger()
 			logfile->close();
 		}
 		delete logfile;
+		logfile = 0;
 	}
 }
 
@@ -187,5 +189,6 @@ inline void del_local_stream( std::ostringstream* stream )
 {
 	Logger::getOutStream() << stream->str() << std::endl;
 	delete stream;
+	stream = 0;
 }
 #endif // MULTI_THREAD
