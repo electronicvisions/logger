@@ -46,7 +46,7 @@ inline std::string Logger::getTime()
 
 inline std::string Logger::getTime()
 {
-	char buffer[20];
+	char buffer[40];
 	time_t t;
 	time(&t);
 	tm r;
