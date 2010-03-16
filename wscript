@@ -42,7 +42,16 @@ def build(bld):
         source='logger.cpp',
         target='logger',
         install_path=None,
-        uselib = ['LOGGER']
+        uselib = ['LOGGER', 'BOOST_THREAD']
+    )
+
+    bld.new_task_gen(
+        features='cxx cstaticlib',
+        source='logger_c.cpp',
+        target='logger_c',
+        install_path=None,
+        uselib = ['LOGGER', 'BOOST_THREAD'],
+        uselib_local='logger',
     )
 
     bld.add_subdirs('usage_example')

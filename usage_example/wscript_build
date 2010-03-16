@@ -15,10 +15,10 @@ usage_example = bld.new_task_gen(
 
 usage_example = bld.new_task_gen(
     features='cxx cprogram',
-    source='case.cpp',
-    target='casetest',
+    source='main_c.C',
+    target='main_c',
     includes='../',
-    uselib='BOOST_THREAD',
-    uselib_local='logger',
+    uselib=['BOOST_THREAD', 'LOGGER',],
+    uselib_local=['logger', 'logger_c',],
     install_path=PWD
 )
