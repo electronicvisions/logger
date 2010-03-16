@@ -1,13 +1,14 @@
 #include "logger.h"
 
 #ifdef MULTI_THREAD
-Logger::Logger(size_t level, std::string filename) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
+Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
 #else
-Logger::Logger(size_t level, std::string filename) : local_stream(NULL), logfilename(filename), loglevel(level)
+Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), logfilename(filename), loglevel(level)
 #endif // MULTI_THREAD
 {
 	deafstream.setstate(std::ostream::badbit);
 	std::ostream* tmp = &std::cout;
+	logdual = dual;
 
 	if (logfilename != "")
 	{
@@ -16,6 +17,11 @@ Logger::Logger(size_t level, std::string filename) : local_stream(NULL), logfile
 		if (!logfile->is_open())
 			throw std::runtime_error("Logger ERROR: unable to open given logfile");
 		tmp=logfile;
+	}
+	else
+	{
+		if (dual)
+			throw std::runtime_error("Logger ERROR: to use dual logging mode you need to provide a filename");
 	}
 	*tmp << "*** Started logging @" << getTime() << " ***" << std::endl;
 }
@@ -106,6 +112,8 @@ Logger::~Logger()
 {
 #ifndef MULTI_THREAD
 	getOutStream() << local_stream->str();
+	if (logdual)
+		std::cout << local_stream->str() << std::endl;
 	delete local_stream;
 	local_stream = NULL;
 #else
@@ -125,7 +133,8 @@ Logger::~Logger()
 
 Logger::Logger& Logger::instance(
 		size_t level,             //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
-		std::string filename      //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
+		std::string filename,     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
+		bool dual
 		)
 {
 #ifdef MULTI_THREAD
@@ -134,7 +143,7 @@ Logger::Logger& Logger::instance(
 	if(!log_ptr)
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
-		log_ptr = boost::shared_ptr<Logger> (new Logger(level, filename));
+		log_ptr = boost::shared_ptr<Logger> (new Logger(level, filename, dual));
 	}
 	return *log_ptr;
 }
@@ -165,6 +174,8 @@ std::ostream& Logger::operator() (size_t level)
 		{
 			*local_stream << std::endl;
 			getOutStream() << local_stream->str();
+			if (logdual)
+				std::cout << local_stream->str();
 		}
 		delete local_stream;
 		local_stream = new std::ostringstream;
@@ -183,6 +194,7 @@ const char* const Logger::buffer[] = {
 // The smart pointer is allocated - not the object itself.
 boost::shared_ptr<Logger> Logger::log_ptr;
 std::ofstream* Logger::logfile(NULL);
+bool Logger::logdual(false);
 
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
@@ -190,6 +202,8 @@ boost::mutex Logger::init_mutex;
 inline void del_local_stream( std::ostringstream* stream )
 {
 	Logger::getOutStream() << stream->str() << std::endl;
+	if (Logger::logdual)
+		std::cout << stream->str() << std::endl;
 	delete stream;
 	stream = 0;
 }

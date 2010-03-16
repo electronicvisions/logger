@@ -13,3 +13,12 @@ usage_example = bld.new_task_gen(
     install_path=PWD
 )
 
+usage_example = bld.new_task_gen(
+    features='cxx cprogram',
+    source='case.cpp',
+    target='casetest',
+    includes='../',
+    uselib='BOOST_THREAD',
+    uselib_local='logger',
+    install_path=PWD
+)

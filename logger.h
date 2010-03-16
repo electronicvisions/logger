@@ -64,8 +64,9 @@ class Logger
 		std::string logfilename;
 		size_t loglevel;
 		std::ostringstream deafstream;
+		static bool logdual;
 
-		explicit Logger(size_t level, std::string filename);
+		explicit Logger(size_t level, std::string filename, bool dual);
 		Logger(Logger&);
 
 		// Formatting the log messages
@@ -101,7 +102,8 @@ class Logger
 		  all further calls return a reference to the one and only instance. */
 		static Logger& instance(
 				size_t level=WARNING,       //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
-				std::string filename=""     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
+				std::string filename="",    //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
+				bool dual=false
 				);
 
 		//! Returns threshold level of the Logger instance
