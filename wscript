@@ -14,6 +14,7 @@ def set_options(opt):
 
 
 def configure(conf):
+    conf.check_tool('compiler_cc')
     conf.check_tool('compiler_cxx')
     conf.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=1)
 

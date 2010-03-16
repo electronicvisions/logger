@@ -7,18 +7,18 @@ usage_example = bld.new_task_gen(
     features='cxx cprogram',
     source='main.cpp',
     target='logtest',
-    includes='../',
+    includes='..',
     uselib='BOOST_THREAD',
     uselib_local='logger',
     install_path=PWD
 )
 
 usage_example = bld.new_task_gen(
-    features='cxx cprogram',
-    source='main_c.C',
+    features='cc cprogram',
+    source='main_c.c',
     target='main_c',
-    includes='../',
+    includes='..',
     uselib=['BOOST_THREAD', 'LOGGER',],
-    uselib_local=['logger', 'logger_c',],
+    uselib_local=['logger_c',],
     install_path=PWD
 )
