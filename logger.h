@@ -36,13 +36,59 @@
 #define COLOR_RESET     "\33[0m"
 
 // Formatting definitions
-#define COLOR_ERROR     COLOR_RED
-#define COLOR_WARNING   COLOR_YELLOW
-#define COLOR_DEFAULT   COLOR_GREEN
+#define COLOR_ERROR              COLOR_RED
+#define COLOR_WARNING            COLOR_YELLOW
+#define COLOR_DEFAULT            COLOR_GREEN
 
 // behaviour
 #define DEFAULT_LOG_THRESHOLD    WARNING
 #define DEFAULT_LOG_LEVEL        DEBUG0
+
+class LogStream
+{
+	protected:
+		std::ostringstream* local_stream;
+		typedef std::ostream& (*stream_manip)(std::ostream&);
+		typedef LogStream& (*log_stream_manip)(LogStream&);
+	private:
+#ifdef MULTI_THREAD
+		//! Delegate destructor for local steams
+		friend void del_local_stream(LogStream*);
+#endif // MULTI_THREAD
+
+		std::ostream& getOutStream();
+		void writeOut();
+	public:
+		LogStream();
+		virtual ~LogStream();
+
+		template <typename T>
+			LogStream& operator<<(const T& val)
+			{
+				if (local_stream->bad()) throw std::runtime_error("Logger::ERROR: define log level first with ()-operator (necessary after flush, too)");
+				*local_stream << val;
+				return *this;
+			}
+
+		//! catch std::ostream format stream manipulators and forward to local stream
+		LogStream& operator<<(stream_manip manip);
+
+		//! catch LogStream manipulators
+		LogStream& operator<<(log_stream_manip manip);
+
+		//! defines the custom flush for the Logger
+		LogStream& flush(LogStream& stream);
+
+		// emulate parts of std::ostringstream interface
+		void setstate ( std::ios_base::iostate state );
+		void clear();
+		bool bad();
+		bool good();
+		std::streamsize width () const;
+		std::streamsize width (std::streamsize wide);
+		std::string str();
+};
+
 
 //! Singleton implementation of Logger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
@@ -57,17 +103,17 @@ class Logger
 {
 	private:
 #ifdef MULTI_THREAD
-		boost::thread_specific_ptr< std::ostringstream > local_stream;
+		boost::thread_specific_ptr<LogStream> local_stream;
 		static boost::mutex init_mutex;
 #else
-		std::ostringstream* local_stream;
+		LogStream* local_stream;
 #endif // MULTI_THREAD
 		static boost::shared_ptr<Logger> log_ptr;
 
 		static std::ofstream* logfile;
 		std::string logfilename;
 		size_t loglevel;
-		std::ostringstream deafstream;
+		LogStream deafstream;
 		static bool logdual;
 
 		explicit Logger(size_t level, std::string filename, bool dual);
@@ -75,27 +121,22 @@ class Logger
 
 		// Formatting the log messages
 		std::string getTime();
-		std::string toString(size_t level);
 		const char* toColor(size_t level) const;
 		const char* resetColor() const;
-		std::ostream& formatStream(size_t level);
+		LogStream& formatStream(size_t level);
 		//! Contains the criticality tags for stream formatting
 		static const char* const buffer[];
 
-		//! flush the old local stream and establish a new formated local string
-		void reset();
-
-		//! Returns std::cout or ofstream reference depending on the chosen output method
-		static std::ostream& getOutStream();
+		//! flush the old local stream and establish a new local string
+		void resetStream(LogStream* stream=new LogStream);
+		//! flush the old local stream and establish a new formated local string with level tag
+		LogStream& resetStream(size_t level);
 
 		//! typedef for pointer to function that takes an ostream and returns an ostream
 		typedef std::ostream& (*stream_manip)(std::ostream&);
-		typedef std::ostream& (*my_stream_manip)(Logger&);
+		typedef LogStream& (*log_stream_manip)(LogStream&);
 
-#ifdef MULTI_THREAD
-		//! Delegate destructor for local steams
-		friend void del_local_stream( std::ostringstream* );
-#endif // MULTI_THREAD
+		friend class LogStream;
 
 	public:
 		~Logger();
@@ -104,7 +145,6 @@ class Logger
 		  Messages streamed into the logger will only be recorded if their criticality is at least the 
 		  criticality level of the logger. */
 		enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
-
 
 		/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance, 
 		  all further calls return a reference to the one and only instance. */
@@ -116,6 +156,7 @@ class Logger
 
 		//! Returns threshold level of the Logger instance
 		size_t getLevel();
+		std::string getLevelStr();
 
 		//! Returns filename of the output file
 		std::string getFilename();
@@ -124,45 +165,27 @@ class Logger
 		bool willBeLogged(size_t level);
 
 		//! Get stream instance
-		std::ostream& operator() (size_t level=DEFAULT_LOG_LEVEL);
+		LogStream& operator() (size_t level=DEFAULT_LOG_LEVEL);
 
-		std::ostream& operator<<(Logger val)
-		{
-			// call the function, and return it's value
-			reset();
-			return formatStream(DEFAULT_LOG_LEVEL);
-		}
-
-		//! defines the custom flush for the Logger
-		static Logger& flush()
-		{
-			//DEBUG
-			std::cout << "FLUSH HAPPENED" <<std::endl;
-			//END DEBUG
-			return *log_ptr;
-		}
-
-		std::ostream& operator<<(my_stream_manip manip) {
-			return manip((*this)());
-		}
-
-
+		//! Stream operator for data in multiline comments
 		template <typename T>
-			std::ostream& operator<<(const T& val)
+			LogStream& operator<<(const T& val)
 			{
-				if (local_stream->bad()) throw std::runtime_error("Logger::ERROR: you need to define a log level with the ()-operator before you can use the multiline feature");
 				return *local_stream << val;
 			}
 
-		//! Get stream instance for multi-line comments via stream operator
-		std::ostream& operator<<(stream_manip manip) {
-			return manip((*this)());
-		}
+		//! catch std::ostream format stream manipulators and forward to local stream
+		LogStream& operator<<(stream_manip manip);
+
+		LogStream& operator<<(log_stream_manip manip);
+
+		//! force flush; ATTENTION afterwards the multiline feature won't work anymore
+		static LogStream& flush(LogStream& stream);
 };
 
 #ifdef MULTI_THREAD
 //! Delegate destructor for local steams
-extern void del_local_stream( std::ostringstream* stream );
+extern void del_local_stream( LogStream* stream );
 #endif // MULTI_THREAD
 
 #endif // __LOGGER_H__

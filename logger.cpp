@@ -1,38 +1,97 @@
 #include "logger.h"
 
+// -------------------------
+// Class LogStream
+// -------------------------
+inline std::ostream& LogStream::getOutStream()
+{
+	if (Logger::logfile) return *(Logger::logfile);
+	return std::cout;
+}
+
+inline void LogStream::writeOut()
+{
+	if (!local_stream->bad())
+	{
+		*local_stream << std::endl;
+		getOutStream() << local_stream->str();
+		if (Logger::logdual)
+			std::cout << local_stream->str();
+	}
+}
+
+LogStream::LogStream() : local_stream(new std::ostringstream) {}
+
+LogStream::~LogStream() { delete local_stream; }
+
+LogStream& LogStream::operator<<(stream_manip manip)
+{
+	manip(*local_stream);
+	return *this;
+}
+
+LogStream& LogStream::operator<<(log_stream_manip manip)
+{
+	return manip(*this);
+}
+
+inline LogStream& LogStream::flush(LogStream& stream)
+{
+	this->writeOut();
+	local_stream->setstate(std::ios_base::badbit);
+	return *this;
+}
+
+void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
+
+void LogStream::clear() { local_stream->clear(); }
+
+bool LogStream::bad() { local_stream->bad(); }
+
+bool LogStream::good() { local_stream->good(); }
+
+std::streamsize LogStream::width () const
+{
+	return local_stream->width();
+}
+
+std::streamsize LogStream::width (std::streamsize wide)
+{
+	local_stream->width(wide);
+	return wide;
+}
+
+std::string LogStream::str() { return local_stream->str(); }
+
+
+// -------------------------
+// Class Logger
+// -------------------------
 #ifdef MULTI_THREAD
 Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
 #else
 Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), logfilename(filename), loglevel(level)
 #endif // MULTI_THREAD
 {
-	deafstream.setstate(std::ostream::badbit);
-	std::ostream* tmp = &std::cout;
+	deafstream.setstate(std::ios_base::badbit);
+	//std::ostream* tmp = &std::cout;
 	logdual = dual;
-
-#ifdef MULTI_THREAD
-	local_stream.reset( new std::ostringstream );
-#else
-	local_stream = new std::ostringstream;
-#endif // MULTI_THREAD
-
-	// mark the new stream as empty
-	local_stream->setstate(std::ostream::badbit);
+	resetStream();
 
 	if (logfilename != "")
 	{
 		logfile = new std::ofstream;
-		logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
+
 		if (!logfile->is_open())
 			throw std::runtime_error("Logger ERROR: unable to open given logfile");
-		tmp=logfile;
+		//tmp=logfile;
 	}
 	else
 	{
 		if (dual)
 			throw std::runtime_error("Logger ERROR: to use dual logging mode you need to provide a filename");
 	}
-	*tmp << "*** Started logging @" << getTime() << " ***" << std::endl;
+	*local_stream << "*** Started logging @" << getTime() << " ***" << Logger::flush;
 }
 
 Logger::Logger(Logger&) {}
@@ -75,11 +134,6 @@ inline std::string Logger::getTime()
 
 #endif //WIN32
 
-inline std::string Logger::toString(size_t level)
-{
-	return buffer[level];
-}
-
 inline const char* Logger::toColor(size_t level) const
 {
 	switch(level) {
@@ -97,40 +151,41 @@ inline const char* Logger::resetColor() const
 	return COLOR_RESET;
 }
 
-inline std::ostream& Logger::formatStream(size_t level)
+inline LogStream& Logger::formatStream(size_t level)
 {
-	// mark the stream as ready for write
-	local_stream->clear();
-
 	*local_stream << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << toColor(level);
 #endif //WIN32
 	local_stream->width(10);
-	*local_stream << std::left << toString(level);
+	*local_stream << std::left << buffer[level] << ": ";
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << resetColor();
 #endif //WIN32
 	return *local_stream;
 }
 
-inline std::ostream& Logger::getOutStream()
+inline void Logger::resetStream(LogStream* stream)
 {
-	if (logfile) return *logfile;
-	return std::cout;
+#ifdef MULTI_THREAD
+	local_stream.reset(stream);
+#else
+	if (local_stream!=NULL)
+		*local_stream << flush;
+	delete local_stream;
+	local_stream = stream;
+#endif // MULTI_THREAD
+}
+
+inline LogStream& Logger::resetStream(size_t level)
+{
+	resetStream();
+	return formatStream(level);
 }
 
 Logger::~Logger()
 {
-#ifndef MULTI_THREAD
-	getOutStream() << local_stream->str();
-	if (logdual)
-		std::cout << local_stream->str() << std::endl;
-	delete local_stream;
-	local_stream = NULL;
-#else
-	local_stream.reset( NULL );
-#endif // MULTI_THREAD
+	resetStream((LogStream*)NULL);
 	if(logfile)
 	{
 		if(logfile->is_open())
@@ -143,7 +198,7 @@ Logger::~Logger()
 	}
 }
 
-Logger::Logger& Logger::instance(
+Logger& Logger::instance(
 		size_t level,             //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
 		std::string filename,     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 		bool dual
@@ -160,55 +215,49 @@ Logger::Logger& Logger::instance(
 	return *log_ptr;
 }
 
-inline size_t Logger::getLevel()
+size_t Logger::getLevel()
 {
 	return loglevel;
 }
 
-inline std::string Logger::getFilename()
+std::string Logger::getLevelStr()
+{
+	return std::string(buffer[loglevel]);
+}
+
+std::string Logger::getFilename()
 {
 	return logfilename;
 }
 
-inline bool Logger::willBeLogged(size_t level)
+bool Logger::willBeLogged(size_t level)
 {
 	return (level <= loglevel);
 }
 
-std::ostream& Logger::operator() (size_t level)
+LogStream& Logger::operator() (size_t level)
 {
-	if(willBeLogged(level))
-	{
-		reset();
-		return formatStream(level);
-	}
-	else return deafstream;
+	if(willBeLogged(level))	return resetStream((size_t)level);
+	return deafstream;
 }
 
-inline void Logger::reset()
-{
-#ifdef MULTI_THREAD
-	local_stream.reset( new std::ostringstream );
-#else
-	if (!local_stream->bad())
-	{
-		*local_stream << std::endl;
-		getOutStream() << local_stream->str();
-		if (logdual)
-			std::cout << local_stream->str();
-	}
-	delete local_stream;
-	local_stream = new std::ostringstream;
-#endif // MULTI_THREAD
+LogStream::LogStream& Logger::operator<<(stream_manip manip) {
+	return *local_stream << manip;
+}
 
-	// mark the new stream as empty
-	local_stream->setstate(std::ostream::badbit);
+LogStream::LogStream& Logger::operator<<(log_stream_manip manip) {
+	return *local_stream << manip;
+}
+
+LogStream& Logger::flush(LogStream& stream)
+{
+	return stream.flush(stream);
 }
 
 const char* const Logger::buffer[] = {
-	"ERROR: ", "WARNING: ", "INFO: ",
-	"DEBUG0: ", "DEBUG1: ", "DEBUG2: ",
-	"DEBUG3: " };
+	"ERROR", "WARNING", "INFO",
+	"DEBUG0", "DEBUG1", "DEBUG2",
+	"DEBUG3" };
 
 // Allocating and initializing Logger's static data member.  
 // The smart pointer is allocated - not the object itself.
@@ -219,13 +268,9 @@ bool Logger::logdual(false);
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
 
-inline void del_local_stream( std::ostringstream* stream )
+inline void del_local_stream( LogStream* stream )
 {
-	if (!stream->bad())
-		(*stream) << std::endl;
-	Logger::getOutStream() << stream->str();
-	if (Logger::logdual)
-		std::cout << stream->str();
+	stream->writeOut();
 	delete stream;
 	stream = NULL;
 }
