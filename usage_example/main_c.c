@@ -3,11 +3,11 @@
 
 int main()
 {
-	init(DEBUG2, "test_c-logfile.txt", /* dual log */1);
-	toLog(3,"test3");
-	toLog(2,"test2");
-	toLog(1,"test1");
-	toLog(0,"test0");
+	log_init(DEBUG2, "test_c-logfile.txt", /* dual log */1);
+	log_print(3,"test3");
+	log_print(2,"test2");
+	log_print(1,"test1");
+	log_print(0,"test0");
 
 	return 0;
 }

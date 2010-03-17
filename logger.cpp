@@ -10,6 +10,15 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NUL
 	std::ostream* tmp = &std::cout;
 	logdual = dual;
 
+#ifdef MULTI_THREAD
+	local_stream.reset( new std::ostringstream );
+#else
+	local_stream = new std::ostringstream;
+#endif // MULTI_THREAD
+
+	// mark the new stream as empty
+	local_stream->setstate(std::ostream::badbit);
+
 	if (logfilename != "")
 	{
 		logfile = new std::ofstream;
@@ -90,14 +99,17 @@ inline const char* Logger::resetColor() const
 
 inline std::ostream& Logger::formatStream(size_t level)
 {
+	// mark the stream as ready for write
+	local_stream->clear();
+
 	*local_stream << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
-	if (!logfile) *local_stream << toColor(level);
+	*local_stream << toColor(level);
 #endif //WIN32
 	local_stream->width(10);
 	*local_stream << std::left << toString(level);
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
-	if (!logfile) *local_stream << resetColor();
+	*local_stream << resetColor();
 #endif //WIN32
 	return *local_stream;
 }
@@ -167,22 +179,30 @@ std::ostream& Logger::operator() (size_t level)
 {
 	if(willBeLogged(level))
 	{
-#ifdef MULTI_THREAD
-		local_stream.reset( new std::ostringstream );
-#else
-		if (local_stream)
-		{
-			*local_stream << std::endl;
-			getOutStream() << local_stream->str();
-			if (logdual)
-				std::cout << local_stream->str();
-		}
-		delete local_stream;
-		local_stream = new std::ostringstream;
-#endif // MULTI_THREAD
+		reset();
 		return formatStream(level);
 	}
 	else return deafstream;
+}
+
+inline void Logger::reset()
+{
+#ifdef MULTI_THREAD
+	local_stream.reset( new std::ostringstream );
+#else
+	if (!local_stream->bad())
+	{
+		*local_stream << std::endl;
+		getOutStream() << local_stream->str();
+		if (logdual)
+			std::cout << local_stream->str();
+	}
+	delete local_stream;
+	local_stream = new std::ostringstream;
+#endif // MULTI_THREAD
+
+	// mark the new stream as empty
+	local_stream->setstate(std::ostream::badbit);
 }
 
 const char* const Logger::buffer[] = {
@@ -201,10 +221,12 @@ boost::mutex Logger::init_mutex;
 
 inline void del_local_stream( std::ostringstream* stream )
 {
-	Logger::getOutStream() << stream->str() << std::endl;
+	if (!stream->bad())
+		(*stream) << std::endl;
+	Logger::getOutStream() << stream->str();
 	if (Logger::logdual)
-		std::cout << stream->str() << std::endl;
+		std::cout << stream->str();
 	delete stream;
-	stream = 0;
+	stream = NULL;
 }
 #endif // MULTI_THREAD

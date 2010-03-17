@@ -40,6 +40,10 @@
 #define COLOR_WARNING   COLOR_YELLOW
 #define COLOR_DEFAULT   COLOR_GREEN
 
+// behaviour
+#define DEFAULT_LOG_THRESHOLD    WARNING
+#define DEFAULT_LOG_LEVEL        DEBUG0
+
 //! Singleton implementation of Logger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
@@ -78,11 +82,15 @@ class Logger
 		//! Contains the criticality tags for stream formatting
 		static const char* const buffer[];
 
+		//! flush the old local stream and establish a new formated local string
+		void reset();
+
 		//! Returns std::cout or ofstream reference depending on the chosen output method
 		static std::ostream& getOutStream();
 
 		//! typedef for pointer to function that takes an ostream and returns an ostream
 		typedef std::ostream& (*stream_manip)(std::ostream&);
+		typedef std::ostream& (*my_stream_manip)(Logger&);
 
 #ifdef MULTI_THREAD
 		//! Delegate destructor for local steams
@@ -101,8 +109,8 @@ class Logger
 		/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance, 
 		  all further calls return a reference to the one and only instance. */
 		static Logger& instance(
-				size_t level=WARNING,       //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
-				std::string filename="",    //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
+				size_t level=DEFAULT_LOG_THRESHOLD,  //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
+				std::string filename="",             //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 				bool dual=false
 				);
 
@@ -116,11 +124,33 @@ class Logger
 		bool willBeLogged(size_t level);
 
 		//! Get stream instance
-		std::ostream& operator() (size_t level=DEBUG0);
+		std::ostream& operator() (size_t level=DEFAULT_LOG_LEVEL);
+
+		std::ostream& operator<<(Logger val)
+		{
+			// call the function, and return it's value
+			reset();
+			return formatStream(DEFAULT_LOG_LEVEL);
+		}
+
+		//! defines the custom flush for the Logger
+		static Logger& flush()
+		{
+			//DEBUG
+			std::cout << "FLUSH HAPPENED" <<std::endl;
+			//END DEBUG
+			return *log_ptr;
+		}
+
+		std::ostream& operator<<(my_stream_manip manip) {
+			return manip((*this)());
+		}
+
 
 		template <typename T>
 			std::ostream& operator<<(const T& val)
 			{
+				if (local_stream->bad()) throw std::runtime_error("Logger::ERROR: you need to define a log level with the ()-operator before you can use the multiline feature");
 				return *local_stream << val;
 			}
 

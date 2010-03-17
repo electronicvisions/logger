@@ -13,11 +13,11 @@ enum LEVELS {
 #ifdef __cplusplus
 extern "C"
 #endif
-void init( unsigned int level, const char* filename, int dual );
+void log_init( unsigned int level, const char* filename, int dual );
 
 #ifdef __cplusplus
 extern "C"
 #endif
-void toLog(unsigned int level, const char* msg);
+void log_print(unsigned int level, const char* msg);
 
 #endif // __LOGGER_C_H__
