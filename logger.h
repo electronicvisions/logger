@@ -44,6 +44,10 @@
 #define DEFAULT_LOG_THRESHOLD    WARNING
 #define DEFAULT_LOG_LEVEL        DEBUG0
 
+//! Stream class used by the Logger
+/*! Stream class used by the Logger. There is no need to use this class stand alone.
+  If you are interested in the Logger itself you should skip this section and
+  start your examination further down. */
 class LogStream
 {
 	protected:
@@ -56,12 +60,15 @@ class LogStream
 		friend void del_local_stream(LogStream*);
 #endif // MULTI_THREAD
 
+		//! Returns std::cout or filestream depending on first Logger instantiation
 		std::ostream& getOutStream();
+		//! Write local stream to output (file/terminal)
 		void writeOut();
 	public:
 		LogStream();
 		virtual ~LogStream();
 
+		//! Forwards stream data to the member stream
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
@@ -70,13 +77,13 @@ class LogStream
 				return *this;
 			}
 
-		//! catch std::ostream format stream manipulators and forward to local stream
+		//! Catches std::ostream format stream manipulators and forward to local stream
 		LogStream& operator<<(stream_manip manip);
 
-		//! catch LogStream manipulators
+		//! Catches LogStream manipulators
 		LogStream& operator<<(log_stream_manip manip);
 
-		//! defines the custom flush for the Logger
+		//! Defines the custom flush for the Logger
 		LogStream& flush(LogStream& stream);
 
 		// emulate parts of std::ostringstream interface
@@ -128,9 +135,9 @@ class Logger
 		//! Contains the criticality tags for stream formatting
 		static const char* const buffer[];
 
-		//! flush the old local stream and establish a new local string
+		//! Flush the old local stream and establish a new local string
 		void resetStream(LogStream* stream=new LogStream);
-		//! flush the old local stream and establish a new formated local string with level tag
+		//! Flush the old local stream and establish a new formated local string with level tag
 		LogStream& resetStream(size_t level);
 
 		//! typedef for pointer to function that takes an ostream and returns an ostream
@@ -157,6 +164,7 @@ class Logger
 
 		//! Returns threshold level of the Logger instance
 		size_t getLevel();
+		//! Returns threshold level of the Logger instance
 		std::string getLevelStr();
 
 		//! Returns filename of the output file
@@ -168,19 +176,20 @@ class Logger
 		//! Get stream instance
 		LogStream& operator() (size_t level=DEFAULT_LOG_LEVEL);
 
-		//! Stream operator for data in multiline comments
+		//! Stream operator for data in multi-line comments
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
 				return *local_stream << val;
 			}
 
-		//! catch std::ostream format stream manipulators and forward to local stream
+		//! Catches std::ostream format stream manipulators and forwards to local LogStream object
 		LogStream& operator<<(stream_manip manip);
 
+		//! Catches LogStream manipulators like flush
 		LogStream& operator<<(log_stream_manip manip);
 
-		//! force flush; ATTENTION afterwards the multiline feature won't work anymore
+		//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
 		static LogStream& flush(LogStream& stream);
 };
 
