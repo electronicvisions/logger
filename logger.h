@@ -83,6 +83,7 @@ class LogStream
 		void setstate ( std::ios_base::iostate state );
 		void clear();
 		bool bad();
+		bool eof();
 		bool good();
 		std::streamsize width () const;
 		std::streamsize width (std::streamsize wide);

@@ -48,6 +48,8 @@ void LogStream::clear() { local_stream->clear(); }
 
 bool LogStream::bad() { local_stream->bad(); }
 
+bool LogStream::eof() { local_stream->eof(); }
+
 bool LogStream::good() { local_stream->good(); }
 
 std::streamsize LogStream::width () const
@@ -73,23 +75,21 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(&de
 Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), logfilename(filename), loglevel(level)
 #endif // MULTI_THREAD
 {
-	deafstream.setstate(std::ios_base::badbit);
-	//std::ostream* tmp = &std::cout;
+	deafstream.setstate(std::ios_base::eofbit);
 	logdual = dual;
 	resetStream();
 
 	if (logfilename != "")
 	{
 		logfile = new std::ofstream;
-
+		logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
 		if (!logfile->is_open())
-			throw std::runtime_error("Logger ERROR: unable to open given logfile");
-		//tmp=logfile;
+			throw std::runtime_error("Logger::ERROR: unable to open given logfile");
 	}
 	else
 	{
 		if (dual)
-			throw std::runtime_error("Logger ERROR: to use dual logging mode you need to provide a filename");
+			throw std::runtime_error("Logger::ERROR: to use dual logging mode you need to provide a filename");
 	}
 	*local_stream << "*** Started logging @" << getTime() << " ***" << Logger::flush;
 }
@@ -158,9 +158,9 @@ inline LogStream& Logger::formatStream(size_t level)
 	*local_stream << toColor(level);
 #endif //WIN32
 	local_stream->width(10);
-	*local_stream << std::left << buffer[level] << ": ";
+	*local_stream << std::left << buffer[level];
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
-	*local_stream << resetColor();
+	*local_stream << resetColor() << ": ";
 #endif //WIN32
 	return *local_stream;
 }
@@ -170,7 +170,7 @@ inline void Logger::resetStream(LogStream* stream)
 #ifdef MULTI_THREAD
 	local_stream.reset(stream);
 #else
-	if (local_stream!=NULL)
+	if (local_stream != NULL)
 		*local_stream << flush;
 	delete local_stream;
 	local_stream = stream;
@@ -186,6 +186,14 @@ inline LogStream& Logger::resetStream(size_t level)
 Logger::~Logger()
 {
 	resetStream((LogStream*)NULL);
+//#ifdef MULTI_THREAD
+	//local_stream.reset(NULL);
+//#else
+	//if (local_stream != NULL)
+		//*local_stream << flush;
+	//delete local_stream;
+	//local_stream = NULL;
+//#endif // MULTI_THREAD
 	if(logfile)
 	{
 		if(logfile->is_open())
