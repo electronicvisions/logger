@@ -24,6 +24,12 @@ LogStream::LogStream() : local_stream(new std::ostringstream) {}
 
 LogStream::~LogStream() { delete local_stream; }
 
+LogStream& LogStream::operator<<(LogStream& val)
+{
+	*local_stream << val.str();
+	return *this;
+}
+
 LogStream& LogStream::operator<<(stream_manip manip)
 {
 	manip(*local_stream);
@@ -37,9 +43,9 @@ LogStream& LogStream::operator<<(log_stream_manip manip)
 
 inline LogStream& LogStream::flush(LogStream& stream)
 {
-	this->writeOut();
-	local_stream->setstate(std::ios_base::badbit);
-	return *this;
+	stream.writeOut();
+	stream.local_stream->setstate(std::ios_base::badbit);
+	return stream;
 }
 
 void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
@@ -186,14 +192,6 @@ inline LogStream& Logger::resetStream(size_t level)
 Logger::~Logger()
 {
 	resetStream((LogStream*)NULL);
-//#ifdef MULTI_THREAD
-	//local_stream.reset(NULL);
-//#else
-	//if (local_stream != NULL)
-		//*local_stream << flush;
-	//delete local_stream;
-	//local_stream = NULL;
-//#endif // MULTI_THREAD
 	if(logfile)
 	{
 		if(logfile->is_open())

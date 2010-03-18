@@ -68,7 +68,10 @@ class LogStream
 		LogStream();
 		virtual ~LogStream();
 
-		//! Forwards stream data to the member stream
+		//! handles LogStream& stream-ins
+		LogStream& operator<<(LogStream& val);
+
+		//! Forwards std::ostream& data to the member local_stream
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
@@ -84,7 +87,7 @@ class LogStream
 		LogStream& operator<<(log_stream_manip manip);
 
 		//! Defines the custom flush for the Logger
-		LogStream& flush(LogStream& stream);
+		static LogStream& flush(LogStream& stream);
 
 		// emulate parts of std::ostringstream interface
 		void setstate ( std::ios_base::iostate state );
@@ -144,6 +147,7 @@ class Logger
 		typedef std::ostream& (*stream_manip)(std::ostream&);
 		typedef LogStream& (*log_stream_manip)(LogStream&);
 
+		//! provide private interface for LogStream class
 		friend class LogStream;
 
 	public:
