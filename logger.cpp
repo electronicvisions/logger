@@ -46,11 +46,11 @@ void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setsta
 
 void LogStream::clear() { local_stream->clear(); }
 
-bool LogStream::bad() { local_stream->bad(); }
+bool LogStream::bad() { return local_stream->bad(); }
 
-bool LogStream::eof() { local_stream->eof(); }
+bool LogStream::eof() { return local_stream->eof(); }
 
-bool LogStream::good() { local_stream->good(); }
+bool LogStream::good() { return local_stream->good(); }
 
 std::streamsize LogStream::width () const
 {
