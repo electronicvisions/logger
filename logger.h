@@ -1,6 +1,6 @@
 // Singleton implementation of Logger class for symap2ic project
-// by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 // by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
+// by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 //
 // IMMER LOGGER BLEIBEN!
 //
