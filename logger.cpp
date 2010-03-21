@@ -22,7 +22,12 @@ inline void LogStream::writeOut()
 
 LogStream::LogStream() : local_stream(new std::ostringstream) {}
 
-LogStream::~LogStream() { delete local_stream; }
+LogStream::~LogStream()
+{
+	this->writeOut();
+	delete local_stream;
+	local_stream=NULL;
+}
 
 LogStream& LogStream::operator<<(LogStream& val)
 {
@@ -76,14 +81,14 @@ std::string LogStream::str() { return local_stream->str(); }
 // Class Logger
 // -------------------------
 #ifdef MULTI_THREAD
-Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(&del_local_stream), logfilename(filename), loglevel(level)
+Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(), logfilename(filename), loglevel(level)
 #else
 Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), logfilename(filename), loglevel(level)
 #endif // MULTI_THREAD
 {
 	deafstream.setstate(std::ios_base::eofbit);
 	logdual = dual;
-	resetStream();
+	resetStream(new LogStream);
 
 	if (logfilename != "")
 	{
@@ -175,9 +180,9 @@ inline void Logger::resetStream(LogStream* stream)
 {
 #ifdef MULTI_THREAD
 	local_stream.reset(stream);
+	if (stream==NULL)
+		local_stream.release();
 #else
-	if (local_stream != NULL)
-		*local_stream << flush;
 	delete local_stream;
 	local_stream = stream;
 #endif // MULTI_THREAD
@@ -185,13 +190,13 @@ inline void Logger::resetStream(LogStream* stream)
 
 inline LogStream& Logger::resetStream(size_t level)
 {
-	resetStream();
+	resetStream(new LogStream);
 	return formatStream(level);
 }
 
 Logger::~Logger()
 {
-	resetStream((LogStream*)NULL);
+	resetStream(static_cast<LogStream*>(NULL));
 	if(logfile)
 	{
 		if(logfile->is_open())
@@ -211,7 +216,7 @@ Logger& Logger::instance(
 		)
 {
 #ifdef MULTI_THREAD
-	boost::mutex::scoped_lock lock(init_mutex);
+	boost::lock_guard<boost::mutex> lock(init_mutex);
 #endif // MULTI_THREAD
 	if(!log_ptr)
 	{
@@ -273,11 +278,4 @@ bool Logger::logdual(false);
 
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;
-
-inline void del_local_stream( LogStream* stream )
-{
-	stream->writeOut();
-	delete stream;
-	stream = NULL;
-}
 #endif // MULTI_THREAD

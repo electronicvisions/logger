@@ -55,10 +55,6 @@ class LogStream
 		typedef std::ostream& (*stream_manip)(std::ostream&);
 		typedef LogStream& (*log_stream_manip)(LogStream&);
 	private:
-#ifdef MULTI_THREAD
-		//! Delegate destructor for local steams
-		friend void del_local_stream(LogStream*);
-#endif // MULTI_THREAD
 
 		//! Returns std::cout or filestream depending on first Logger instantiation
 		std::ostream& getOutStream();
@@ -139,7 +135,7 @@ class Logger
 		static const char* const buffer[];
 
 		//! Flush the old local stream and establish a new local string
-		void resetStream(LogStream* stream=new LogStream);
+		void resetStream(LogStream* stream);
 		//! Flush the old local stream and establish a new formated local string with level tag
 		LogStream& resetStream(size_t level);
 
@@ -196,10 +192,5 @@ class Logger
 		//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
 		static LogStream& flush(LogStream& stream);
 };
-
-#ifdef MULTI_THREAD
-//! Delegate destructor for local steams
-extern void del_local_stream( LogStream* stream );
-#endif // MULTI_THREAD
 
 #endif // __LOGGER_H__
