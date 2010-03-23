@@ -137,7 +137,7 @@ class Logger
 		//! Flush the old local stream and establish a new local string
 		void resetStream(LogStream* stream);
 		//! Flush the old local stream and establish a new formated local string with level tag
-		LogStream& resetStream(size_t level);
+		LogStream& resetStreamLevel(size_t level);
 
 		//! typedef for pointer to function that takes an ostream and returns an ostream
 		typedef std::ostream& (*stream_manip)(std::ostream&);

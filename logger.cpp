@@ -180,15 +180,13 @@ inline void Logger::resetStream(LogStream* stream)
 {
 #ifdef MULTI_THREAD
 	local_stream.reset(stream);
-	if (stream==NULL)
-		local_stream.release();
 #else
 	delete local_stream;
 	local_stream = stream;
 #endif // MULTI_THREAD
 }
 
-inline LogStream& Logger::resetStream(size_t level)
+inline LogStream& Logger::resetStreamLevel(size_t level)
 {
 	resetStream(new LogStream);
 	return formatStream(level);
@@ -196,7 +194,7 @@ inline LogStream& Logger::resetStream(size_t level)
 
 Logger::~Logger()
 {
-	resetStream(static_cast<LogStream*>(NULL));
+	resetStream(NULL);
 	if(logfile)
 	{
 		if(logfile->is_open())
@@ -216,7 +214,7 @@ Logger& Logger::instance(
 		)
 {
 #ifdef MULTI_THREAD
-	boost::lock_guard<boost::mutex> lock(init_mutex);
+	boost::mutex::scoped_lock lock(init_mutex);
 #endif // MULTI_THREAD
 	if(!log_ptr)
 	{
@@ -248,7 +246,7 @@ bool Logger::willBeLogged(size_t level)
 
 LogStream& Logger::operator() (size_t level)
 {
-	if(willBeLogged(level))	return resetStream((size_t)level);
+	if(willBeLogged(level))	return resetStreamLevel(level);
 	return deafstream;
 }
 
