@@ -3,6 +3,10 @@
 // -------------------------
 // Class LogStream
 // -------------------------
+inline LogStream& LogStream::getDeafstream()
+{
+	return Logger::deafstream;
+}
 inline std::ostream& LogStream::getOutStream()
 {
 	if (Logger::logfile) return *(Logger::logfile);
@@ -40,7 +44,6 @@ LogStream& LogStream::operator<<(stream_manip manip)
 	manip(*local_stream);
 	return *this;
 }
-
 LogStream& LogStream::operator<<(log_stream_manip manip)
 {
 	return manip(*this);
@@ -247,15 +250,8 @@ bool Logger::willBeLogged(size_t level)
 LogStream& Logger::operator() (size_t level)
 {
 	if(willBeLogged(level))	return resetStreamLevel(level);
+	resetStream(NULL);
 	return deafstream;
-}
-
-LogStream::LogStream& Logger::operator<<(stream_manip manip) {
-	return *local_stream << manip;
-}
-
-LogStream::LogStream& Logger::operator<<(log_stream_manip manip) {
-	return *local_stream << manip;
 }
 
 LogStream& Logger::flush(LogStream& stream)
@@ -273,6 +269,7 @@ const char* const Logger::buffer[] = {
 boost::shared_ptr<Logger> Logger::log_ptr;
 std::ofstream* Logger::logfile(NULL);
 bool Logger::logdual(false);
+LogStream Logger::deafstream;
 
 #ifdef MULTI_THREAD
 boost::mutex Logger::init_mutex;

@@ -56,6 +56,7 @@ class LogStream
 		typedef LogStream& (*log_stream_manip)(LogStream&);
 	private:
 
+		LogStream& getDeafstream();
 		//! Returns std::cout or filestream depending on first Logger instantiation
 		std::ostream& getOutStream();
 		//! Write local stream to output (file/terminal)
@@ -71,7 +72,7 @@ class LogStream
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
-				if (local_stream->bad()) throw std::runtime_error("Logger::ERROR: define log level first with ()-operator (necessary after flush, too)");
+				if (local_stream->bad()) return getDeafstream();
 				*local_stream << val;
 				return *this;
 			}
@@ -120,7 +121,7 @@ class Logger
 		static std::ofstream* logfile;
 		std::string logfilename;
 		size_t loglevel;
-		LogStream deafstream;
+		static LogStream deafstream;
 		static bool logdual;
 
 		explicit Logger(size_t level, std::string filename, bool dual);
@@ -138,10 +139,6 @@ class Logger
 		void resetStream(LogStream* stream);
 		//! Flush the old local stream and establish a new formated local string with level tag
 		LogStream& resetStreamLevel(size_t level);
-
-		//! typedef for pointer to function that takes an ostream and returns an ostream
-		typedef std::ostream& (*stream_manip)(std::ostream&);
-		typedef LogStream& (*log_stream_manip)(LogStream&);
 
 		//! provide private interface for LogStream class
 		friend class LogStream;
@@ -180,14 +177,19 @@ class Logger
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
-				return *local_stream << val;
+				if (local_stream.get())
+					return *local_stream << val;
+				return deafstream;
 			}
 
-		//! Catches std::ostream format stream manipulators and forwards to local LogStream object
-		LogStream& operator<<(stream_manip manip);
-
-		//! Catches LogStream manipulators like flush
-		LogStream& operator<<(log_stream_manip manip);
+		//! Catches stream manupulators like std::ostream manipulators or LogStream stream manipulators in multi-line comments
+		template <typename T>
+			LogStream& operator<<(T& (*__fp)(T&))
+			{
+				if(local_stream.get())
+					return *local_stream << __fp;
+				return deafstream;
+			}
 
 		//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
 		static LogStream& flush(LogStream& stream);
