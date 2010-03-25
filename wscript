@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-import os
+import sys, os
+sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
+from configtools import *
 
 APPNAME='logger'
-srcdir = '.'
 
 # We have to set our build root to symap2ic.
 srcdir = os.environ['SYMAP2IC_PATH']
 
 
 def set_options(opt):
-    opt.tool_options('compiler_cc')
     opt.tool_options('compiler_cxx')
 
 
 def configure(conf):
-    conf.check_tool('compiler_cc')
     conf.check_tool('compiler_cxx')
     conf.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=1)
 
@@ -35,6 +34,8 @@ def configure(conf):
     check_boost_thread()
 
     conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
+    import Options
+    conf.env.CPPPATH_LOGGER = [LOGGER_PATH]
 
 
 def build(bld):
