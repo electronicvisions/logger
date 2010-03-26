@@ -34,8 +34,7 @@ def configure(conf):
     check_boost_thread()
 
     conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
-    import Options
-    conf.env.CPPPATH_LOGGER = [LOGGER_PATH]
+    conf.env.CPPPATH_LOGGER = conf.cwd
 
 
 def build(bld):
