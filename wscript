@@ -17,21 +17,22 @@ def configure(conf):
     conf.check_tool('compiler_cxx')
     conf.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=1)
 
-    def check_boost_thread():
-        import Configure
-        try:
-            conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread-mt",
-                           uselib_store='BOOST_THREAD', mandatory=1)
-            return
-        except Configure.ConfigurationError:
-            conf.check_message_2('Non-standard boost_thread installation? Another try:', 'PINK')
-        try:
-            conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread",
-                           uselib_store='BOOST_THREAD', mandatory=1)
-            return
-        except Configure.ConfigurationError:
-            raise
-    check_boost_thread()
+    # def check_boost_thread():
+    #     import Configure
+    #     try:
+    #         conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread-mt",
+    #                        uselib_store='BOOST_THREAD', mandatory=1)
+    #         return
+    #     except Configure.ConfigurationError:
+    #         conf.check_message_2('Non-standard boost_thread installation? Another try:', 'PINK')
+    #     try:
+    #         conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread",
+    #                        uselib_store='BOOST_THREAD', mandatory=1)
+    #         return
+    #     except Configure.ConfigurationError:
+    #         raise
+    # check_boost_thread()
+    check_BOOST_THREAD(conf)
 
     conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
     conf.env.CPPPATH_LOGGER = conf.curdir
