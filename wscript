@@ -34,7 +34,7 @@ def configure(conf):
     check_boost_thread()
 
     conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
-    conf.env.CPPPATH_LOGGER = conf.cwd
+    conf.env.CPPPATH_LOGGER = conf.curdir
 
 
 def build(bld):
