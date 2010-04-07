@@ -11,10 +11,12 @@ srcdir = os.environ['SYMAP2IC_PATH']
 
 def set_options(opt):
     opt.tool_options('compiler_cxx')
+    opt.tool_options('compiler_cc')
 
 
 def configure(conf):
     conf.check_tool('compiler_cxx')
+    conf.check_tool('compiler_cc')
     conf.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=1)
 
     # def check_boost_thread():

@@ -10,7 +10,7 @@ usage_example = bld.new_task_gen(
     includes='..',
     uselib='BOOST_THREAD',
     uselib_local='logger',
-    install_path=PWD
+    install_path=None,
 )
 
 usage_example = bld.new_task_gen(
@@ -20,5 +20,5 @@ usage_example = bld.new_task_gen(
     includes='..',
     uselib=['BOOST_THREAD', 'LOGGER',],
     uselib_local=['logger_c',],
-    install_path=PWD
+    install_path=None,
 )

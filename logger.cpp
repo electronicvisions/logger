@@ -138,7 +138,7 @@ inline std::string Logger::getTime()
 	time_t t;
 	time(&t);
 	tm r;
-	strftime(buffer, sizeof(buffer), "%x %X", localtime_r(&t, &r));
+	strftime(buffer, sizeof(buffer), "%y-%m-%d %X", localtime_r(&t, &r));
 	struct timeval tv;
 	gettimeofday(&tv, 0);
 	char result[100] = {0};
