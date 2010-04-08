@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys, os
 sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
-from configtools import *
+from symwaf2ic import *
 
 APPNAME='logger'
 
