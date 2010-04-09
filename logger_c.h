@@ -20,4 +20,4 @@ extern "C"
 #endif
 void log_print(unsigned int level, const char* msg);
 
-#endif // __LOGGER_C_H__
+#endif /* __LOGGER_C_H__ */
