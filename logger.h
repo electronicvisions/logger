@@ -12,10 +12,8 @@
 
 #define MULTI_THREAD
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdexcept>
 #include <boost/shared_ptr.hpp>
 
 #ifdef MULTI_THREAD

@@ -1,4 +1,6 @@
 #include "logger.h"
+#include <iostream>
+#include <stdexcept>
 
 // -------------------------
 // Class LogStream
