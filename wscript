@@ -6,7 +6,7 @@ from symwaf2ic import *
 APPNAME='logger'
 
 # We have to set our build root to symap2ic.
-srcdir = os.environ['SYMAP2IC_PATH']
+srcdir = SYMAP2IC_PATH
 
 
 def set_options(opt):
