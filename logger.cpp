@@ -58,6 +58,31 @@ inline LogStream& LogStream::flush(LogStream& stream)
 	return stream;
 }
 
+LogStream& LogStream::black(LogStream& stream)
+{
+	return stream << COLOR_BLACK;
+}
+
+LogStream& LogStream::blue(LogStream& stream)
+{
+	return stream << COLOR_BLUE;
+}
+
+LogStream& LogStream::purple(LogStream& stream)
+{
+	return stream << COLOR_PURPLE;
+}
+
+LogStream& LogStream::marine(LogStream& stream)
+{
+	return stream << COLOR_MARINE;
+}
+
+LogStream& LogStream::reset(LogStream& stream)
+{
+	return stream << COLOR_RESET;
+}
+
 void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
 
 void LogStream::clear() { local_stream->clear(); }
@@ -169,7 +194,7 @@ inline const char* Logger::resetColor() const
 
 inline LogStream& Logger::formatStream(size_t level)
 {
-	*local_stream << getTime();
+	*local_stream << COLOR_RESET << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << toColor(level);
 #endif //WIN32

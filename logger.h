@@ -84,6 +84,13 @@ class LogStream
 		//! Defines the custom flush for the Logger
 		static LogStream& flush(LogStream& stream);
 
+		//! color modifier
+		static LogStream& black(LogStream& stream);
+		static LogStream& blue(LogStream& stream);
+		static LogStream& purple(LogStream& stream);
+		static LogStream& marine(LogStream& stream);
+		static LogStream& reset(LogStream& stream);
+
 		// emulate parts of std::ostringstream interface
 		void setstate ( std::ios_base::iostate state );
 		void clear();
