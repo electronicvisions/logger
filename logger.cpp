@@ -63,6 +63,21 @@ LogStream& LogStream::black(LogStream& stream)
 	return stream << COLOR_BLACK;
 }
 
+LogStream& LogStream::red(LogStream& stream)
+{
+	return stream << COLOR_RED;
+}
+
+LogStream& LogStream::green(LogStream& stream)
+{
+	return stream << COLOR_GREEN;
+}
+
+LogStream& LogStream::yellow(LogStream& stream)
+{
+	return stream << COLOR_YELLOW;
+}
+
 LogStream& LogStream::blue(LogStream& stream)
 {
 	return stream << COLOR_BLUE;

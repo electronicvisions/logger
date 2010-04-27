@@ -86,6 +86,9 @@ class LogStream
 
 		//! color modifier
 		static LogStream& black(LogStream& stream);
+		static LogStream& red(LogStream& stream);
+		static LogStream& green(LogStream& stream);
+		static LogStream& yellow(LogStream& stream);
 		static LogStream& blue(LogStream& stream);
 		static LogStream& purple(LogStream& stream);
 		static LogStream& marine(LogStream& stream);

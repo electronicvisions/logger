@@ -28,6 +28,15 @@ int main()
 
 	// you need to get a new message instance by using the ()-operator
     log(Logger::INFO) << "New log stream instance. This message works again";
+
+	// you can use colors
+	log(Logger::INFO) << "R" << LogStream::purple;
+	log << "a" << LogStream::red;
+	log << "i" << LogStream::yellow;
+	log << "n" << LogStream::green;
+	log << "b" << LogStream::marine;
+	log << "o" << LogStream::blue;
+	log << "w" << LogStream::purple;
 }
 
 
