@@ -36,26 +36,29 @@ def configure(conf):
     # check_boost_thread()
     check_BOOST_THREAD(conf)
 
-    conf.env.CXXFLAGS_LOGGER  = ('-O0 -g -fPIC').split()
-    conf.env.CPPPATH_LOGGER = conf.curdir
-
 
 def build(bld):
     bld.new_task_gen(
-        features='cxx cstaticlib',
-        source='logger.cpp',
-        target='logger',
-        install_path=None,
-        uselib = ['LOGGER', 'BOOST_THREAD']
+        target         = 'logger',
+        features       = 'cxx cstaticlib',
+        source         = 'logger.cpp',
+        includes       = '.',
+        export_incdirs = '.',
+        cxxflags       = ['-O0', '-g', '-fPIC'],
+        uselib         = ['BOOST_THREAD'],
+        install_path   = None,
     )
 
     bld.new_task_gen(
-        features='cxx cstaticlib',
-        source='logger_c.cpp',
-        target='logger_c',
-        install_path=None,
-        uselib = ['LOGGER', 'BOOST_THREAD'],
-        uselib_local='logger',
+        target         = 'logger_c',
+        features       = 'cxx cstaticlib',
+        source         = 'logger_c.cpp',
+        includes       = '.',
+        export_incdirs = '.',
+        cxxflags       = ['-O0', '-g', '-fPIC'],
+        uselib         = ['BOOST_THREAD'],
+        uselib_local   = 'logger',
+        install_path   = None,
     )
 
     bld.add_subdirs('usage_example')
