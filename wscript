@@ -6,10 +6,10 @@ from symwaf2ic import *
 APPNAME='logger'
 
 # We have to set our build root to symap2ic.
-srcdir = SYMAP2IC_PATH
+top = SYMAP2IC_PATH
 
 
-def set_options(opt):
+def options(opt):
     opt.tool_options('compiler_cxx')
     opt.tool_options('compiler_cc')
 
@@ -40,10 +40,10 @@ def configure(conf):
 def build(bld):
     bld.new_task_gen(
         target         = 'logger',
-        features       = 'cxx cstaticlib',
+        features       = 'cxx cxxstlib',
         source         = 'logger.cpp',
         includes       = '.',
-        export_incdirs = '.',
+        export_includes= '.',
         cxxflags       = ['-O0', '-g', '-fPIC'],
         uselib         = ['BOOST_THREAD'],
         install_path   = None,
@@ -51,13 +51,13 @@ def build(bld):
 
     bld.new_task_gen(
         target         = 'logger_c',
-        features       = 'cxx cstaticlib',
+        features       = 'cxx cxxstlib',
         source         = 'logger_c.cpp',
         includes       = '.',
-        export_incdirs = '.',
+        export_includes= '.',
         cxxflags       = ['-O0', '-g', '-fPIC'],
         uselib         = ['BOOST_THREAD'],
-        uselib_local   = 'logger',
+        use            = 'logger',
         install_path   = None,
     )
 
