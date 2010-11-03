@@ -9,15 +9,19 @@ APPNAME='logger'
 top = SYMAP2IC_PATH
 
 
-def options(opt):
-    opt.tool_options('compiler_cxx')
-    opt.tool_options('compiler_cc')
+def options(ctx):
+    ctx.load('compiler_c')
+    ctx.load('compiler_cxx')
+    ctx.load('boost')
 
 
-def configure(conf):
-    conf.check_tool('compiler_cxx')
-    conf.check_tool('compiler_cc')
-    conf.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=1)
+def configure(ctx):
+    ctx.load('compiler_c')
+    ctx.load('compiler_cxx')
+    ctx.load('boost')
+
+    ctx.check_boost(lib='thread', mandatory=True)
+    ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
 
     # def check_boost_thread():
     #     import Configure
@@ -34,31 +38,42 @@ def configure(conf):
     #     except Configure.ConfigurationError:
     #         raise
     # check_boost_thread()
-    check_BOOST_THREAD(conf)
+    #check_BOOST_THREAD(conf)
 
 
 def build(bld):
-    bld.new_task_gen(
-        target         = 'logger',
-        features       = 'cxx cxxstlib',
-        source         = 'logger.cpp',
-        includes       = '.',
-        export_includes= '.',
-        cxxflags       = ['-O0', '-g', '-fPIC'],
-        uselib         = ['BOOST_THREAD'],
-        install_path   = None,
+    bld.objects (
+        target          = 'logger_obj',
+        source          = 'logger.cpp',
+        includes        = '.',
+        export_includes = '.',
+        cxxflags        = ['-O0', '-g', '-fPIC'],
+        use             = ['BOOST_THREAD'],
     )
 
+    # this target is deprecated
+    bld.new_task_gen (
+        target          = 'logger',
+        features        = 'cxx cxxstlib',
+        use             = ['BOOST_THREAD', 'logger_obj'],
+        install_path    = None,
+    )
+
+    bld.objects (
+        target          = 'logger_c_obj',
+        source          = 'logger_c.cpp',
+        includes        = '.',
+        export_includes = '.',
+        cxxflags        = ['-O0', '-g', '-fPIC'],
+        use             = ['BOOST_THREAD'],
+    )
+
+    # this target is deprecated
     bld.new_task_gen(
-        target         = 'logger_c',
-        features       = 'cxx cxxstlib',
-        source         = 'logger_c.cpp',
-        includes       = '.',
-        export_includes= '.',
-        cxxflags       = ['-O0', '-g', '-fPIC'],
-        uselib         = ['BOOST_THREAD'],
-        use            = 'logger',
-        install_path   = None,
+        target          = 'logger_c',
+        features        = 'cxx cxxstlib',
+        use             = ['BOOST_THREAD', 'logger_obj', 'logger_c_obj'],
+        install_path    = None,
     )
 
     bld.add_subdirs('usage_example')
