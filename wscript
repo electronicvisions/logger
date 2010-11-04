@@ -23,39 +23,24 @@ def configure(ctx):
     ctx.check_boost(lib='thread', mandatory=True)
     ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
 
-    # def check_boost_thread():
-    #     import Configure
-    #     try:
-    #         conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread-mt",
-    #                        uselib_store='BOOST_THREAD', mandatory=1)
-    #         return
-    #     except Configure.ConfigurationError:
-    #         conf.check_message_2('Non-standard boost_thread installation? Another try:', 'PINK')
-    #     try:
-    #         conf.check_cxx(header_name='boost/thread.hpp', lib="boost_thread",
-    #                        uselib_store='BOOST_THREAD', mandatory=1)
-    #         return
-    #     except Configure.ConfigurationError:
-    #         raise
-    # check_boost_thread()
-    #check_BOOST_THREAD(conf)
+    ctx.env.INCLUDES_LOGGER = ['.',]
+    ctx.env.CXXFLAGS_LOGGER = ['-O0', '-g', '-fPIC']
 
 
 def build(bld):
     bld.objects (
         target          = 'logger_obj',
         source          = 'logger.cpp',
-        includes        = '.',
-        export_includes = '.',
-        cxxflags        = ['-O0', '-g', '-fPIC'],
-        use             = ['BOOST_THREAD'],
+        export_includes = bld.env.INCLUDES_LOGGER,
+        uselib          = ['BOOST_THREAD', 'LOGGER'],
     )
 
     # this target is deprecated
     bld.new_task_gen (
         target          = 'logger',
         features        = 'cxx cxxstlib',
-        use             = ['BOOST_THREAD', 'logger_obj'],
+        export_includes = bld.env.INCLUDES_LOGGER,
+        use             = ['BOOST_THREAD', 'LOGGER', 'logger_obj'],
         install_path    = None,
     )
 
