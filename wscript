@@ -5,8 +5,9 @@ from symwaf2ic import *
 
 APPNAME='logger'
 
-# We have to set our build root to symap2ic.
-top = SYMAP2IC_PATH
+# this should support top-hack and normal building
+import Options
+(top,out) = tophack(Options.Context.launch_dir)
 
 
 def options(ctx):
