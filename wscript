@@ -21,7 +21,7 @@ def configure(ctx):
     ctx.load('compiler_cxx')
     ctx.load('boost')
 
-    ctx.check_boost(lib='thread', mandatory=True)
+    check_BOOST_THREAD(ctx)
     ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
 
     ctx.env.INCLUDES_LOGGER = ['.',]
