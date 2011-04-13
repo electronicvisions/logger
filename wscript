@@ -14,6 +14,7 @@ def options(ctx):
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
     ctx.load('boost')
+    ctx.add_option('--log_color', action='store', default=False, help='use color for log output (default: False)')
 
 
 def configure(ctx):
@@ -24,16 +25,19 @@ def configure(ctx):
     ctx.check_boost(lib='thread', mandatory=True)
     ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
 
-    ctx.env.INCLUDES_LOGGER = ['.',]
-    ctx.env.CXXFLAGS_LOGGER = ['-O0', '-g', '-fPIC']
+    ctx.env.INCLUDES_LOGGER    = ['.',]
+    ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
+    ctx.env.CXXFLAGS_LOGGEROBJ = ['-O0', '-g', '-fPIC']
+    if Options.options.log_color:
+        ctx.env.CXXFLAGS_LOGGEROBJ += ['-DLOG_COLOR_OUTPUT',]
+        ctx.env.color = True
 
 
 def build(bld):
     bld.objects (
-        target          = 'logger_obj',
+        target          = 'loggerobj',
         source          = 'logger.cpp',
-        export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['BOOST_THREAD', 'LOGGER'],
+        use             = ['BOOST_THREAD', 'LOGGEROBJ'],
     )
 
     # this target is deprecated
@@ -41,16 +45,15 @@ def build(bld):
         target          = 'logger',
         features        = 'cxx cxxstlib',
         export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['BOOST_THREAD', 'LOGGER', 'logger_obj'],
+        use             = ['loggerobj', ],
         install_path    = None,
     )
 
     bld.objects (
         target          = 'logger_c_obj',
         source          = 'logger_c.cpp',
-        includes        = '.',
-        export_includes = '.',
-        cxxflags        = ['-O0', '-g', '-fPIC'],
+        export_includes = bld.env.INCLUDES_LOGGER,
+        cxxflags        = bld.env.CXXFLAGS_LOGGER,
         use             = ['BOOST_THREAD'],
     )
 
@@ -58,8 +61,9 @@ def build(bld):
     bld(
         target          = 'logger_c',
         features        = 'cxx cxxstlib',
-        use             = ['BOOST_THREAD', 'logger_obj', 'logger_c_obj'],
+        use             = ['loggerobj', 'logger_c_obj'],
         install_path    = None,
     )
 
-    bld.recurse('usage_example')
+    if bld.env.color:
+        bld.recurse('usage_example')

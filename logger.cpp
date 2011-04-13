@@ -58,6 +58,7 @@ inline LogStream& LogStream::flush(LogStream& stream)
 	return stream;
 }
 
+#ifdef LOG_COLOR_OUTPUT
 LogStream& LogStream::black(LogStream& stream)
 {
 	return stream << COLOR_BLACK;
@@ -97,6 +98,7 @@ LogStream& LogStream::reset(LogStream& stream)
 {
 	return stream << COLOR_RESET;
 }
+#endif // LOG_COLOR_OUTPUT
 
 void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
 
@@ -190,6 +192,7 @@ inline std::string Logger::getTime()
 
 #endif //WIN32
 
+#ifdef LOG_COLOR_OUTPUT
 inline const char* Logger::toColor(size_t level) const
 {
 	switch(level) {
@@ -206,9 +209,11 @@ inline const char* Logger::resetColor() const
 {
 	return COLOR_RESET;
 }
+#endif // LOG_COLOR_OUTPUT
 
 inline LogStream& Logger::formatStream(size_t level)
 {
+#ifdef LOG_COLOR_OUTPUT
 	*local_stream << COLOR_RESET << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << toColor(level);
@@ -218,6 +223,12 @@ inline LogStream& Logger::formatStream(size_t level)
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << resetColor() << ": ";
 #endif //WIN32
+#else // LOG_COLOR_OUTPUT
+	*local_stream  << getTime();
+	local_stream->width(10);
+	*local_stream << std::left << buffer[level] << ": ";
+#endif // LOG_COLOR_OUTPUT
+
 	return *local_stream;
 }
 

@@ -8,7 +8,8 @@ usage_example = bld(
     source='main.cpp',
     target='logtest',
     includes='..',
-    use = ['BOOST_THREAD', 'LOGGER', 'logger'],
+    linkflags='-lboost_thread',
+    use = ['logger'],
     install_path=None,
 )
 
@@ -17,6 +18,7 @@ usage_example = bld(
     source='main_c.c',
     target='main_c',
     includes='..',
-    use=['BOOST_THREAD', 'LOGGER', 'logger_c'],
+    linkflags='-lboost_thread',
+    use=['logger_c', ],
     install_path=None,
 )

@@ -23,6 +23,7 @@
 #endif // MULTI_THREAD
 
 // Color definitions
+#ifdef LOG_COLOR_OUTPUT
 #define COLOR_BLACK     "\33[30m"
 #define COLOR_RED       "\33[31m"
 #define COLOR_GREEN     "\33[32m"
@@ -37,6 +38,7 @@
 #define COLOR_ERROR              COLOR_RED
 #define COLOR_WARNING            COLOR_YELLOW
 #define COLOR_DEFAULT            COLOR_GREEN
+#endif // LOG_COLOR_OUTPUT
 
 // behaviour
 #define DEFAULT_LOG_THRESHOLD    WARNING
@@ -85,6 +87,7 @@ class LogStream
 		static LogStream& flush(LogStream& stream);
 
 		//! color modifier
+#ifdef LOG_COLOR_OUTPUT
 		static LogStream& black(LogStream& stream);
 		static LogStream& red(LogStream& stream);
 		static LogStream& green(LogStream& stream);
@@ -93,6 +96,7 @@ class LogStream
 		static LogStream& purple(LogStream& stream);
 		static LogStream& marine(LogStream& stream);
 		static LogStream& reset(LogStream& stream);
+#endif // LOG_COLOR_OUTPUT
 
 		// emulate parts of std::ostringstream interface
 		void setstate ( std::ios_base::iostate state );
@@ -137,8 +141,10 @@ class Logger
 
 		// Formatting the log messages
 		std::string getTime();
+#ifdef LOG_COLOR_OUTPUT
 		const char* toColor(size_t level) const;
 		const char* resetColor() const;
+#endif // LOG_COLOR_OUTPUT
 		LogStream& formatStream(size_t level);
 		//! Contains the criticality tags for stream formatting
 		static const char* const buffer[];
