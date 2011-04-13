@@ -6,7 +6,7 @@ from symwaf2ic import *
 APPNAME='logger'
 
 # this should support top-hack and normal building
-import Options
+from waflib import Options
 (top,out) = tophack(Options.Context.launch_dir)
 
 
@@ -33,11 +33,11 @@ def build(bld):
         target          = 'logger_obj',
         source          = 'logger.cpp',
         export_includes = bld.env.INCLUDES_LOGGER,
-        uselib          = ['BOOST_THREAD', 'LOGGER'],
+        use             = ['BOOST_THREAD', 'LOGGER'],
     )
 
     # this target is deprecated
-    bld.new_task_gen (
+    bld(
         target          = 'logger',
         features        = 'cxx cxxstlib',
         export_includes = bld.env.INCLUDES_LOGGER,
@@ -55,11 +55,11 @@ def build(bld):
     )
 
     # this target is deprecated
-    bld.new_task_gen(
+    bld(
         target          = 'logger_c',
         features        = 'cxx cxxstlib',
         use             = ['BOOST_THREAD', 'logger_obj', 'logger_c_obj'],
         install_path    = None,
     )
 
-    bld.add_subdirs('usage_example')
+    bld.recurse('usage_example')

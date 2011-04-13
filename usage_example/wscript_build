@@ -3,22 +3,20 @@
 import os
 PWD=os.getcwd()
 
-usage_example = bld.new_task_gen(
+usage_example = bld(
     features='cxx cprogram',
     source='main.cpp',
     target='logtest',
     includes='..',
-    uselib='BOOST_THREAD',
-    uselib_local='logger',
+    use = ['BOOST_THREAD', 'LOGGER', 'logger'],
     install_path=None,
 )
 
-usage_example = bld.new_task_gen(
-    features='cc cprogram',
+usage_example = bld(
+    features='cxx cprogram',
     source='main_c.c',
     target='main_c',
     includes='..',
-    uselib=['BOOST_THREAD', 'LOGGER',],
-    uselib_local=['logger_c',],
+    use=['BOOST_THREAD', 'LOGGER', 'logger_c'],
     install_path=None,
 )
