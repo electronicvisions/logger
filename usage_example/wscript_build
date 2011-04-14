@@ -9,7 +9,7 @@ usage_example = bld(
     target='logtest',
     includes='..',
     linkflags='-lboost_thread',
-    use = ['logger'],
+    use = ['logger_obj'],
     install_path=None,
 )
 
@@ -19,6 +19,6 @@ usage_example = bld(
     target='main_c',
     includes='..',
     linkflags='-lboost_thread',
-    use=['logger_c', ],
+    use=['logger_c_obj', ],
     install_path=None,
 )
