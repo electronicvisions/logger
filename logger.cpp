@@ -149,7 +149,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NUL
 		if (dual)
 			throw std::runtime_error("Logger::ERROR: to use dual logging mode you need to provide a filename");
 	}
-	*local_stream << "*** Started logging @" << getTime() << " ***" << Logger::flush;
+	*local_stream << "*** Started logging @" << getTime() << "with log level: " << buffer[level] << " ***" << Logger::flush;
 }
 
 Logger::Logger(Logger&) {}

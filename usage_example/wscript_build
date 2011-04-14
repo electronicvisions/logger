@@ -14,7 +14,7 @@ usage_example = bld(
 )
 
 usage_example = bld(
-    features='cxx cprogram',
+    features='c cprogram',
     source='main_c.c',
     target='main_c',
     includes='..',

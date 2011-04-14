@@ -29,7 +29,8 @@ int main()
 	// you need to get a new message instance by using the ()-operator
     log(Logger::INFO) << "New log stream instance. This message works again";
 
-	// you can use colors
+#ifdef LOG_COLOR_OUTPUT
+	// you can use colors, if you turn them of during configuration
 	log(Logger::INFO) << "R" << LogStream::purple;
 	log << "a" << LogStream::red;
 	log << "i" << LogStream::yellow;
@@ -37,6 +38,7 @@ int main()
 	log << "b" << LogStream::marine;
 	log << "o" << LogStream::blue;
 	log << "w" << LogStream::purple;
+#endif // LOG_COLOR_OUTPUT
 }
 
 
