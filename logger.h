@@ -10,17 +10,17 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
-#define MULTI_THREAD
+#define LOG_MULTI_THREAD
 
 #include <fstream>
 #include <sstream>
 #include <boost/shared_ptr.hpp>
 
-#ifdef MULTI_THREAD
+#ifdef LOG_MULTI_THREAD
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
-#endif // MULTI_THREAD
+#endif // LOG_MULTI_THREAD
 
 // Color definitions
 #ifdef LOG_COLOR_OUTPUT
@@ -43,6 +43,10 @@
 // behaviour
 #define DEFAULT_LOG_THRESHOLD    WARNING
 #define DEFAULT_LOG_LEVEL        DEBUG0
+
+// forward declarations
+class LogStream;
+class Logger;
 
 //! Stream class used by the Logger
 /*! Stream class used by the Logger. There is no need to use this class stand alone.
@@ -110,6 +114,7 @@ class LogStream
 };
 
 
+
 //! Singleton implementation of Logger class
 /*! Only one single instance of this class can be created by calling the public function instance(). 
   Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
@@ -122,17 +127,18 @@ class LogStream
 class Logger
 {
 	private:
-#ifdef MULTI_THREAD
+#ifdef LOG_MULTI_THREAD
 		boost::thread_specific_ptr<LogStream> local_stream;
 		static boost::mutex init_mutex;
+		boost::thread_specific_ptr<size_t> loglevel;
 #else
 		LogStream* local_stream;
-#endif // MULTI_THREAD
+		size_t loglevel;
+#endif // LOG_MULTI_THREAD
 		static boost::shared_ptr<Logger> log_ptr;
 
 		static std::ofstream* logfile;
 		std::string logfilename;
-		size_t loglevel;
 		static LogStream deafstream;
 		static bool logdual;
 
@@ -153,9 +159,6 @@ class Logger
 		void resetStream(LogStream* stream);
 		//! Flush the old local stream and establish a new formated local string with level tag
 		LogStream& resetStreamLevel(size_t level);
-
-		//! provide private interface for LogStream class
-		friend class LogStream;
 
 	public:
 		~Logger();
@@ -191,7 +194,11 @@ class Logger
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
+#ifdef LOG_MULTI_THREAD
 				if (local_stream.get())
+#else
+				if (local_stream)
+#endif // LOG_MULTI_THREAD
 					return *local_stream << val;
 				return deafstream;
 			}
@@ -200,13 +207,32 @@ class Logger
 		template <typename T>
 			LogStream& operator<<(T& (*__fp)(T&))
 			{
+#ifdef LOG_MULTI_THREAD
 				if(local_stream.get())
+#else
+				if (local_stream)
+#endif // LOG_MULTI_THREAD
 					return *local_stream << __fp;
 				return deafstream;
 			}
 
 		//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
 		static LogStream& flush(LogStream& stream);
+
+		// allows for log level escalation (RAII-style)
+		class AlterLevel
+		{
+			public:
+				explicit AlterLevel(size_t level);
+				~AlterLevel();
+			private:
+				size_t old_level;
+		};
+
+	private:
+		//! provide private interface for LogStream class
+		friend class LogStream;
+		friend class Logger::AlterLevel;
 };
 
 #endif // __LOGGER_H__

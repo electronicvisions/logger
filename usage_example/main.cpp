@@ -1,6 +1,5 @@
 #include "logger.h"
 
-
 void other();
 
 int main()
@@ -28,6 +27,16 @@ int main()
 
 	// you need to get a new message instance by using the ()-operator
     log(Logger::INFO) << "New log stream instance. This message works again";
+
+	{
+		// new RAII-style feature: temporary log level escalation
+		//    the local log level is reset within the object's current scope
+		Logger::AlterLevel level_escalation(Logger::DEBUG0);
+		log(Logger::DEBUG0) << "This message will be recorded, even though (DEBUG0) is globaly too low.";
+
+		Logger::AlterLevel level_reduction(Logger::ERROR);
+		log(Logger::WARNING) << "This message won't be recorded, even though (WARNING) is globaly high enough.";
+	}
 
 #ifdef LOG_COLOR_OUTPUT
 	// you can use colors, if you turn them of during configuration
