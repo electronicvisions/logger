@@ -58,6 +58,7 @@ inline LogStream& LogStream::flush(LogStream& stream)
 	return stream;
 }
 
+#ifdef LOG_COLOR_OUTPUT
 LogStream& LogStream::black(LogStream& stream)
 {
 	return stream << COLOR_BLACK;
@@ -97,6 +98,7 @@ LogStream& LogStream::reset(LogStream& stream)
 {
 	return stream << COLOR_RESET;
 }
+#endif // LOG_COLOR_OUTPUT
 
 void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
 
@@ -125,15 +127,20 @@ std::string LogStream::str() { return local_stream->str(); }
 // -------------------------
 // Class Logger
 // -------------------------
-#ifdef MULTI_THREAD
-Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(), logfilename(filename), loglevel(level)
+#ifdef LOG_MULTI_THREAD
+Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(), loglevel(), logfilename(filename)
 #else
-Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), logfilename(filename), loglevel(level)
-#endif // MULTI_THREAD
+Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), loglevel(NULL), logfilename(filename)
+#endif // LOG_MULTI_THREAD
 {
 	deafstream.setstate(std::ios_base::eofbit);
 	logdual = dual;
 	resetStream(new LogStream);
+#ifdef LOG_MULTI_THREAD
+	loglevel.reset(new size_t(level));
+#else
+	loglevel = new size_t(level);
+#endif // LOG_MULTI_THREAD
 
 	if (logfilename != "")
 	{
@@ -147,7 +154,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NUL
 		if (dual)
 			throw std::runtime_error("Logger::ERROR: to use dual logging mode you need to provide a filename");
 	}
-	*local_stream << "*** Started logging @" << getTime() << " ***" << Logger::flush;
+	*local_stream << "*** Started logging @" << getTime() << "with log level: " << buffer[level] << " ***" << Logger::flush;
 }
 
 Logger::Logger(Logger&) {}
@@ -190,6 +197,7 @@ inline std::string Logger::getTime()
 
 #endif //WIN32
 
+#ifdef LOG_COLOR_OUTPUT
 inline const char* Logger::toColor(size_t level) const
 {
 	switch(level) {
@@ -206,9 +214,11 @@ inline const char* Logger::resetColor() const
 {
 	return COLOR_RESET;
 }
+#endif // LOG_COLOR_OUTPUT
 
 inline LogStream& Logger::formatStream(size_t level)
 {
+#ifdef LOG_COLOR_OUTPUT
 	*local_stream << COLOR_RESET << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << toColor(level);
@@ -218,17 +228,23 @@ inline LogStream& Logger::formatStream(size_t level)
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << resetColor() << ": ";
 #endif //WIN32
+#else // LOG_COLOR_OUTPUT
+	*local_stream  << getTime();
+	local_stream->width(10);
+	*local_stream << std::left << buffer[level] << ": ";
+#endif // LOG_COLOR_OUTPUT
+
 	return *local_stream;
 }
 
 inline void Logger::resetStream(LogStream* stream)
 {
-#ifdef MULTI_THREAD
+#ifdef LOG_MULTI_THREAD
 	local_stream.reset(stream);
 #else
 	delete local_stream;
 	local_stream = stream;
-#endif // MULTI_THREAD
+#endif // LOG_MULTI_THREAD
 }
 
 inline LogStream& Logger::resetStreamLevel(size_t level)
@@ -250,6 +266,11 @@ Logger::~Logger()
 		delete logfile;
 		logfile = 0;
 	}
+#ifdef LOG_MULTI_THREAD
+	loglevel.reset(NULL);
+#else
+	delete loglevel;
+#endif // LOG_MULTI_THREAD
 }
 
 Logger& Logger::instance(
@@ -258,9 +279,9 @@ Logger& Logger::instance(
 		bool dual
 		)
 {
-#ifdef MULTI_THREAD
+#ifdef LOG_MULTI_THREAD
 	boost::mutex::scoped_lock lock(init_mutex);
-#endif // MULTI_THREAD
+#endif // LOG_MULTI_THREAD
 	if(!log_ptr)
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
@@ -271,12 +292,12 @@ Logger& Logger::instance(
 
 size_t Logger::getLevel()
 {
-	return loglevel;
+	return *loglevel;
 }
 
 std::string Logger::getLevelStr()
 {
-	return std::string(buffer[loglevel]);
+	return std::string(buffer[*loglevel]);
 }
 
 std::string Logger::getFilename()
@@ -286,7 +307,7 @@ std::string Logger::getFilename()
 
 bool Logger::willBeLogged(size_t level)
 {
-	return (level <= loglevel);
+	return (level <= *loglevel);
 }
 
 LogStream& Logger::operator() (size_t level)
@@ -301,6 +322,27 @@ LogStream& Logger::flush(LogStream& stream)
 	return stream.flush(stream);
 }
 
+Logger::AlterLevel::AlterLevel(size_t level) {
+	Logger& log = Logger::instance();
+	old_level = *log.loglevel;
+	*log.loglevel = level;
+}
+
+Logger::AlterLevel::~AlterLevel()
+{
+	Logger& log = Logger::instance();
+	*log.loglevel = old_level;
+}
+
+void* Logger::AlterLevel::operator new(size_t size) throw(std::bad_alloc)
+{
+	throw std::bad_alloc();
+	return NULL;
+}
+
+void  Logger::AlterLevel::operator delete(void *p) {}
+
+
 const char* const Logger::buffer[] = {
 	"ERROR", "WARNING", "INFO",
 	"DEBUG0", "DEBUG1", "DEBUG2",
@@ -313,6 +355,6 @@ std::ofstream* Logger::logfile(NULL);
 bool Logger::logdual(false);
 LogStream Logger::deafstream;
 
-#ifdef MULTI_THREAD
+#ifdef LOG_MULTI_THREAD
 boost::mutex Logger::init_mutex;
-#endif // MULTI_THREAD
+#endif // LOG_MULTI_THREAD
