@@ -334,15 +334,6 @@ Logger::AlterLevel::~AlterLevel()
 	*log.loglevel = old_level;
 }
 
-void* Logger::AlterLevel::operator new(size_t size) throw(std::bad_alloc)
-{
-	throw std::bad_alloc();
-	return NULL;
-}
-
-void  Logger::AlterLevel::operator delete(void *p) {}
-
-
 const char* const Logger::buffer[] = {
 	"ERROR", "WARNING", "INFO",
 	"DEBUG0", "DEBUG1", "DEBUG2",

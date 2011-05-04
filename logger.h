@@ -225,9 +225,10 @@ class Logger
 			public:
 				explicit AlterLevel(size_t level);
 				~AlterLevel();
+				
+			private:
 				void* operator new(size_t size) throw(std::bad_alloc);
 				void  operator delete(void *p);
-			private:
 				size_t old_level;
 		};
 
