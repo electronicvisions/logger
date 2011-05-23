@@ -225,10 +225,13 @@ class Logger
 			public:
 				explicit AlterLevel(size_t level);
 				~AlterLevel();
-				void* operator new(size_t size) throw(std::bad_alloc);
-				void  operator delete(void *p);
 			private:
 				size_t old_level;
+				// prevent heap allocation
+				void* operator new(size_t size) throw(std::bad_alloc);
+				void* operator new[](size_t size) throw(std::bad_alloc);
+				void  operator delete(void *p);
+				void  operator delete[](void *p);
 		};
 
 	private:
