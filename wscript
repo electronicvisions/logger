@@ -26,7 +26,7 @@ def configure(ctx):
     ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
-    ctx.env.CXXFLAGS_LOGGER    = [ '-g', '-fPIC']
+    ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
     if Options.options.log_color:
         ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
         ctx.env.color = True
