@@ -5,26 +5,6 @@
 // -------------------------
 // Class LogStream
 // -------------------------
-inline LogStream& LogStream::getDeafstream()
-{
-	return Logger::deafstream;
-}
-inline std::ostream& LogStream::getOutStream()
-{
-	if (Logger::logfile) return *(Logger::logfile);
-	return std::cout;
-}
-
-inline void LogStream::writeOut()
-{
-	if (!local_stream->bad())
-	{
-		*local_stream << std::endl;
-		getOutStream() << local_stream->str();
-		if (Logger::logdual)
-			std::cout << local_stream->str();
-	}
-}
 
 LogStream::LogStream() : local_stream(new std::ostringstream) {}
 
@@ -49,13 +29,6 @@ LogStream& LogStream::operator<<(stream_manip manip)
 LogStream& LogStream::operator<<(log_stream_manip manip)
 {
 	return manip(*this);
-}
-
-inline LogStream& LogStream::flush(LogStream& stream)
-{
-	stream.writeOut();
-	stream.local_stream->setstate(std::ios_base::badbit);
-	return stream;
 }
 
 #ifdef LOG_COLOR_OUTPUT
@@ -159,99 +132,8 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NUL
 
 Logger::Logger(Logger&) {}
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 
-#include <windows.h>
 
-inline std::string Logger::getTime()
-{
-	const int MAX_LEN = 200;
-	char buffer[MAX_LEN];
-	if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0,
-				"HH':'mm':'ss", buffer, MAX_LEN) == 0)
-		return "Error in Logger::getTime()";
-
-	char result[100] = {0};
-	static DWORD first = GetTickCount();
-	std::sprintf(result, "%s.%03ld ", buffer, (long)(GetTickCount() - first) % 1000);
-	return result;
-}
-
-#else
-
-#include <sys/time.h>
-
-inline std::string Logger::getTime()
-{
-	char buffer[40];
-	time_t t;
-	time(&t);
-	tm r;
-	strftime(buffer, sizeof(buffer), "%y-%m-%d %X", localtime_r(&t, &r));
-	struct timeval tv;
-	gettimeofday(&tv, 0);
-	char result[100] = {0};
-	std::sprintf(result, "%s.%03ld ", buffer, (long)tv.tv_usec / 1000);
-	return result;
-}
-
-#endif //WIN32
-
-#ifdef LOG_COLOR_OUTPUT
-inline const char* Logger::toColor(size_t level) const
-{
-	switch(level) {
-		case ERROR:
-			return COLOR_ERROR;
-		case WARNING:
-			return COLOR_WARNING;
-		default:
-			return COLOR_DEFAULT;
-	}
-}
-
-inline const char* Logger::resetColor() const
-{
-	return COLOR_RESET;
-}
-#endif // LOG_COLOR_OUTPUT
-
-inline LogStream& Logger::formatStream(size_t level)
-{
-#ifdef LOG_COLOR_OUTPUT
-	*local_stream << COLOR_RESET << getTime();
-#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
-	*local_stream << toColor(level);
-#endif //WIN32
-	local_stream->width(10);
-	*local_stream << std::left << buffer[level];
-#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
-	*local_stream << resetColor() << ": ";
-#endif //WIN32
-#else // LOG_COLOR_OUTPUT
-	*local_stream  << getTime();
-	local_stream->width(10);
-	*local_stream << std::left << buffer[level] << ": ";
-#endif // LOG_COLOR_OUTPUT
-
-	return *local_stream;
-}
-
-inline void Logger::resetStream(LogStream* stream)
-{
-#ifdef LOG_MULTI_THREAD
-	local_stream.reset(stream);
-#else
-	delete local_stream;
-	local_stream = stream;
-#endif // LOG_MULTI_THREAD
-}
-
-inline LogStream& Logger::resetStreamLevel(size_t level)
-{
-	resetStream(new LogStream);
-	return formatStream(level);
-}
 
 Logger::~Logger()
 {
