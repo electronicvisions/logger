@@ -42,8 +42,8 @@
 #endif // LOG_COLOR_OUTPUT
 
 // behaviour
-#define DEFAULT_LOG_THRESHOLD    WARNING
-#define DEFAULT_LOG_LEVEL        DEBUG0
+#define DEFAULT_LOG_THRESHOLD    Logger::WARNING
+#define DEFAULT_LOG_LEVEL        Logger::DEBUG0
 
 // forward declarations
 class LogStream;
@@ -366,4 +366,47 @@ inline LogStream& Logger::resetStreamLevel(size_t level)
 	return formatStream(level);
 }
 
+
+
+// Basic logger class that features a "prefix" in front of every message
+class PrefixedLogger /* : public LoggerInterface */ {
+	// we should refactor class Logger to implement a common "LoggerInterface"
+	// and use the same interface here
+	Logger * log_ptr;
+	std::string prefix;
+
+	PrefixedLogger() {}
+	PrefixedLogger(std::string prefix, Logger * log_ptr) :
+		prefix(prefix),
+		log_ptr(log_ptr)
+	{}
+
+public:
+	// factory method to emulate Logger's behavior
+	static PrefixedLogger& instance(
+		std::string prefix,
+		size_t level=DEFAULT_LOG_THRESHOLD,
+		std::string filename="",
+		bool dual=false)
+	{
+		Logger * log_ptr = &(Logger::instance(level, filename, dual));
+		return *(new PrefixedLogger(prefix, log_ptr));
+	}
+
+	PrefixedLogger& operator() (size_t level=DEFAULT_LOG_LEVEL) {
+		(*log_ptr)(level);
+		return *this;
+	}
+
+	template <typename T>
+	LogStream& operator<<(const T& val)
+	{
+		return ((*log_ptr) << "[" << prefix << "] " << val);
+	}
+
+	template <typename T>
+	LogStream& operator<<(T& (*__fp)(T&)) {
+		return ((*log_ptr) << __fp);
+	}
+};
 #endif // __LOGGER_H__

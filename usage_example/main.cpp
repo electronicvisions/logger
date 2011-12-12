@@ -1,6 +1,7 @@
 #include "logger.h"
 
 void other();
+void another();
 
 int main()
 {
@@ -48,6 +49,8 @@ int main()
 	log << "o" << LogStream::blue;
 	log << "w" << LogStream::purple;
 #endif // LOG_COLOR_OUTPUT
+
+	another();
 }
 
 
@@ -58,4 +61,12 @@ void other()
     Logger& log = Logger::instance();
 
     log(Logger::INFO) << "This message comes from a different scope but goes into the same Logger instance.";
+}
+
+void another() {
+	// logging with a prefix...
+	PrefixedLogger& log = PrefixedLogger::instance("myprefix", Logger::INFO);
+
+	log(Logger::INFO) << "This is a prefixed test";
+	log(Logger::INFO) << "This is another prefixed test";
 }
