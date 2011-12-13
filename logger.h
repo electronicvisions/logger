@@ -372,8 +372,8 @@ inline LogStream& Logger::resetStreamLevel(size_t level)
 class PrefixedLogger /* : public LoggerInterface */ {
 	// we should refactor class Logger to implement a common "LoggerInterface"
 	// and use the same interface here
-	Logger * log_ptr;
 	std::string prefix;
+	Logger * log_ptr;
 
 	PrefixedLogger() {}
 	PrefixedLogger(std::string prefix, Logger * log_ptr) :
