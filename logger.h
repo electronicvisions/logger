@@ -18,9 +18,11 @@
 #include <boost/shared_ptr.hpp>
 
 #ifdef LOG_MULTI_THREAD
+#ifndef PYPLUSPLUS
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
+#endif
 #endif // LOG_MULTI_THREAD
 
 // Color definitions
@@ -48,6 +50,8 @@
 // forward declarations
 class LogStream;
 class Logger;
+
+using std::size_t;
 
 //! Stream class used by the Logger
 /*! Stream class used by the Logger. There is no need to use this class stand alone.
@@ -129,9 +133,11 @@ class Logger
 {
 	private:
 #ifdef LOG_MULTI_THREAD
+#ifndef PYPLUSPLUS
 		boost::thread_specific_ptr<LogStream> local_stream;
 		static boost::mutex init_mutex;
 		boost::thread_specific_ptr<size_t> loglevel;
+#endif
 #else
 		LogStream* local_stream;
 		size_t loglevel;
@@ -195,12 +201,14 @@ class Logger
 		template <typename T>
 			LogStream& operator<<(const T& val)
 			{
+#ifndef PYPLUSPLUS
 #ifdef LOG_MULTI_THREAD
 				if (local_stream.get())
 #else
 				if (local_stream)
 #endif // LOG_MULTI_THREAD
 					return *local_stream << val;
+#endif
 				return deafstream;
 			}
 
@@ -208,12 +216,14 @@ class Logger
 		template <typename T>
 			LogStream& operator<<(T& (*__fp)(T&))
 			{
+#ifndef PYPLUSPLUS
 #ifdef LOG_MULTI_THREAD
 				if(local_stream.get())
 #else
 				if (local_stream)
 #endif // LOG_MULTI_THREAD
 					return *local_stream << __fp;
+#endif
 				return deafstream;
 			}
 
@@ -331,6 +341,7 @@ inline const char* Logger::resetColor() const
 
 inline LogStream& Logger::formatStream(size_t level)
 {
+#ifndef PYPLUSPLUS
 #ifdef LOG_COLOR_OUTPUT
 	*local_stream << COLOR_RESET << getTime();
 #if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
@@ -348,12 +359,15 @@ inline LogStream& Logger::formatStream(size_t level)
 #endif // LOG_COLOR_OUTPUT
 
 	return *local_stream;
+#endif // PYPLUSPLUS
 }
 
 inline void Logger::resetStream(LogStream* stream)
 {
 #ifdef LOG_MULTI_THREAD
+#ifndef PYPLUSPLUS
 	local_stream.reset(stream);
+#endif
 #else
 	delete local_stream;
 	local_stream = stream;
