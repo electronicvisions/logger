@@ -101,16 +101,22 @@ std::string LogStream::str() { return local_stream->str(); }
 // Class Logger
 // -------------------------
 #ifdef LOG_MULTI_THREAD
-Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(), loglevel(), logfilename(filename)
+Logger::Logger(size_t level, std::string filename, bool dual) :
+	static_loglevel(level),
+	local_stream(),
+	loglevel(),
 #else
-Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NULL), loglevel(NULL), logfilename(filename)
+Logger::Logger(size_t level, std::string filename, bool dual) :
+	static_loglevel(level),
+	local_stream(NULL),
+	loglevel(NULL),
 #endif // LOG_MULTI_THREAD
+	logfilename(filename)
 {
-	deafstream.setstate(std::ios_base::eofbit);
 	logdual = dual;
+	deafstream.setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 #ifdef LOG_MULTI_THREAD
-	loglevel.reset(new size_t(level));
 #else
 	loglevel = new size_t(level);
 #endif // LOG_MULTI_THREAD
@@ -130,7 +136,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) : local_stream(NUL
 	*local_stream << "*** Started logging @" << getTime() << "with log level: " << buffer[level] << " ***" << Logger::flush;
 }
 
-Logger::Logger(Logger&) {}
+Logger::Logger(Logger&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
 
 
 
@@ -172,14 +178,9 @@ Logger& Logger::instance(
 	return *log_ptr;
 }
 
-size_t Logger::getLevel()
-{
-	return *loglevel;
-}
-
 std::string Logger::getLevelStr()
 {
-	return std::string(buffer[*loglevel]);
+	return std::string(buffer[getLevel()]);
 }
 
 std::string Logger::getFilename()
@@ -189,7 +190,7 @@ std::string Logger::getFilename()
 
 bool Logger::willBeLogged(size_t level)
 {
-	return (level <= *loglevel);
+	return (level <= getLevel());
 }
 
 LogStream& Logger::operator() (size_t level)

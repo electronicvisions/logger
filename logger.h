@@ -132,11 +132,12 @@ class LogStream
 class Logger
 {
 	private:
+		size_t const static_loglevel;
 #ifdef LOG_MULTI_THREAD
 #ifndef PYPLUSPLUS
 		boost::thread_specific_ptr<LogStream> local_stream;
 		static boost::mutex init_mutex;
-		boost::shared_ptr<size_t> loglevel;
+		boost::thread_specific_ptr<size_t> loglevel;
 #endif
 #else
 		LogStream* local_stream;
@@ -185,6 +186,7 @@ class Logger
 
 		//! Returns threshold level of the Logger instance
 		size_t getLevel();
+
 		//! Returns threshold level of the Logger instance
 		std::string getLevelStr();
 
@@ -281,6 +283,15 @@ inline LogStream& LogStream::flush(LogStream& stream)
 	return stream;
 }
 
+
+inline size_t Logger::getLevel() {
+#ifdef LOG_MULTI_THREAD
+	if (!loglevel.get())
+		loglevel.reset(new size_t(static_loglevel));
+#else
+#endif // LOG_MULTI_THREAD
+	return *loglevel;
+}
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 
