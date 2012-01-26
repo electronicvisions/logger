@@ -136,7 +136,7 @@ class Logger
 #ifndef PYPLUSPLUS
 		boost::thread_specific_ptr<LogStream> local_stream;
 		static boost::mutex init_mutex;
-		boost::thread_specific_ptr<size_t> loglevel;
+		boost::shared_ptr<size_t> loglevel;
 #endif
 #else
 		LogStream* local_stream;

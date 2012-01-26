@@ -149,7 +149,7 @@ Logger::~Logger()
 		logfile = 0;
 	}
 #ifdef LOG_MULTI_THREAD
-	loglevel.reset(NULL);
+	loglevel.reset();
 #else
 	delete loglevel;
 #endif // LOG_MULTI_THREAD
