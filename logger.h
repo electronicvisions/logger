@@ -434,4 +434,13 @@ public:
 		return ((*log_ptr) << __fp);
 	}
 };
+
+class LoggerMixin
+{
+	public:
+		LoggerMixin() : mLog(Logger::instance()) {}
+	protected:
+		Logger& mLog;
+};
+
 #endif // __LOGGER_H__

@@ -1,5 +1,10 @@
 #include "logger.h"
 
+struct A : public LoggerMixin
+{
+	void test() { mLog(Logger::ERROR) << "Logger Mixin works" << Logger::flush; }
+};
+
 void other();
 void another();
 
@@ -38,6 +43,8 @@ int main()
 		Logger::AlterLevel level_reduction(Logger::ERROR);
 		log(Logger::WARNING) << "This message won't be recorded, even though (WARNING) is globaly high enough.";
 	}
+
+	A a; a.test();
 
 #ifdef LOG_COLOR_OUTPUT
 	// you can use colors, if you turn them of during configuration
