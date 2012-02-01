@@ -388,6 +388,7 @@ inline void Logger::resetStream(LogStream* stream)
 inline LogStream& Logger::resetStreamLevel(size_t level)
 {
 	resetStream(new LogStream);
+	if (logfile) logfile->flush();
 	return formatStream(level);
 }
 
