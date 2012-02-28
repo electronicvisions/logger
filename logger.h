@@ -210,7 +210,7 @@ class Logger
 				if (local_stream)
 #endif // LOG_MULTI_THREAD
 					return *local_stream << val;
-#endif
+#endif // !PYPLUSPLUS
 				return deafstream;
 			}
 
@@ -225,7 +225,7 @@ class Logger
 				if (local_stream)
 #endif // LOG_MULTI_THREAD
 					return *local_stream << __fp;
-#endif
+#endif // !PYPLUSPLUS
 				return deafstream;
 			}
 
@@ -285,12 +285,14 @@ inline LogStream& LogStream::flush(LogStream& stream)
 
 
 inline size_t Logger::getLevel() {
+#ifndef PYPLUSPLUS
 #ifdef LOG_MULTI_THREAD
 	if (!loglevel.get())
 		loglevel.reset(new size_t(static_loglevel));
 #else
 #endif // LOG_MULTI_THREAD
 	return *loglevel;
+#endif // !PYPLUSPLUS
 }
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
