@@ -117,6 +117,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	deafstream.setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 #ifdef LOG_MULTI_THREAD
+	loglevel.reset(new size_t(level));
 #else
 	loglevel = new size_t(level);
 #endif // LOG_MULTI_THREAD
@@ -133,7 +134,8 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 		if (dual)
 			throw std::runtime_error("Logger::ERROR: to use dual logging mode you need to provide a filename");
 	}
-	*local_stream << "*** Started logging @" << getTime() << "with log level: " << buffer[level] << " ***" << Logger::flush;
+	*local_stream << "*** Started logging (" << LOGGER_VERSION << ") @" << getTime() << \
+		"with log level: " << buffer[level] << " ***" << Logger::flush;
 }
 
 Logger::Logger(Logger&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
@@ -159,6 +161,7 @@ Logger::~Logger()
 #else
 	delete loglevel;
 #endif // LOG_MULTI_THREAD
+	log_ptr.reset(static_cast<Logger*>(NULL));
 }
 
 Logger& Logger::instance(
@@ -214,6 +217,7 @@ Logger::AlterLevel::AlterLevel(size_t level) {
 Logger::AlterLevel::~AlterLevel()
 {
 	Logger& log = Logger::instance();
+
 	*log.loglevel = old_level;
 }
 

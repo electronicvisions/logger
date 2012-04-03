@@ -18,11 +18,14 @@
 #include <boost/shared_ptr.hpp>
 
 #ifdef LOG_MULTI_THREAD
+#define LOGGER_VERSION "MT"
 #ifndef PYPLUSPLUS
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/tss.hpp>
+	#include <boost/thread/thread.hpp>
+	#include <boost/thread/mutex.hpp>
+	#include <boost/thread/tss.hpp>
 #endif
+#else
+#define LOGGER_VERSION "non-MT"
 #endif // LOG_MULTI_THREAD
 
 // Color definitions
@@ -141,7 +144,7 @@ class Logger
 #endif
 #else
 		LogStream* local_stream;
-		size_t loglevel;
+		size_t* loglevel;
 #endif // LOG_MULTI_THREAD
 		static boost::shared_ptr<Logger> log_ptr;
 
