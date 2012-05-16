@@ -4,7 +4,7 @@ import os
 PWD=os.getcwd()
 
 usage_example = bld(
-    features='cxx cprogram',
+    features='cxx cxxprogram',
     source='main.cpp',
     target='logtest',
     includes='..',
@@ -14,7 +14,8 @@ usage_example = bld(
 )
 
 usage_example = bld(
-    features='c cprogram',
+    # ECM: c -> cxx fixes a problem with gold-linker on old lucid installs... *hack*
+    features='cxx cxxprogram',
     source='main_c.c',
     target='main_c',
     includes='..',
