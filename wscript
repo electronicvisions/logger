@@ -23,7 +23,7 @@ def configure(ctx):
     ctx.load('boost')
 
     check_BOOST_THREAD(ctx)
-    ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
+    # ECM: check for boost header is obsolete if we already depend on other boost stuff
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
     ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
