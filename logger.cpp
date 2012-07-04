@@ -114,7 +114,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	logfilename(filename)
 {
 	logdual = dual;
-	deafstream.setstate(std::ios_base::eofbit);
+	deafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 #ifdef LOG_MULTI_THREAD
 	loglevel.reset(new size_t(level));
@@ -200,7 +200,7 @@ LogStream& Logger::operator() (size_t level)
 {
 	if(willBeLogged(level))	return resetStreamLevel(level);
 	resetStream(NULL);
-	return deafstream;
+	return deafstream();
 }
 
 LogStream& Logger::flush(LogStream& stream)
@@ -231,7 +231,7 @@ const char* const Logger::buffer[] = {
 boost::shared_ptr<Logger> Logger::log_ptr;
 std::ofstream* Logger::logfile(NULL);
 bool Logger::logdual(false);
-LogStream Logger::deafstream;
+
 
 #ifdef LOG_MULTI_THREAD
 boost::mutex Logger::init_mutex;
