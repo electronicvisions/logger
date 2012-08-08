@@ -150,7 +150,14 @@ class Logger
 
 		static std::ofstream* logfile;
 		std::string logfilename;
-		static LogStream deafstream;
+
+		// static init fiasco fix:
+		// changed static member var to init-on-construction idiom (ECM)
+		static LogStream& deafstream() {
+			static LogStream* ret = new LogStream();
+			return *ret;
+		}
+
 		static bool logdual;
 
 		explicit Logger(size_t level, std::string filename, bool dual);
@@ -214,7 +221,7 @@ class Logger
 #endif // LOG_MULTI_THREAD
 					return *local_stream << val;
 #endif // !PYPLUSPLUS
-				return deafstream;
+				return Logger::deafstream();
 			}
 
 		//! Catches stream manupulators like std::ostream manipulators or LogStream stream manipulators in multi-line comments
@@ -229,7 +236,7 @@ class Logger
 #endif // LOG_MULTI_THREAD
 					return *local_stream << __fp;
 #endif // !PYPLUSPLUS
-				return deafstream;
+				return Logger::deafstream();
 			}
 
 		//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
@@ -259,7 +266,7 @@ class Logger
 
 inline LogStream& LogStream::getDeafstream()
 {
-	return Logger::deafstream;
+	return Logger::deafstream();
 }
 
 inline std::ostream& LogStream::getOutStream()
