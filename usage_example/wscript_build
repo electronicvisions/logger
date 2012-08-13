@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
 import os
-PWD=os.getcwd()
 
 usage_example = bld(
     features='cxx cxxprogram',
     source='main.cpp',
     target='logtest',
-    includes='..',
-    linkflags='-lboost_thread',
     use = ['logger_obj'],
-    install_path=None,
 )
 
 usage_example = bld(
@@ -18,8 +14,5 @@ usage_example = bld(
     features='cxx cxxprogram',
     source='main_c.c',
     target='main_c',
-    includes='..',
-    linkflags='-lboost_thread',
     use=['logger_c_obj', ],
-    install_path=None,
 )

@@ -10,16 +10,16 @@ def options(ctx):
     ctx.load('g++')
     ctx.load('boost')
 
-    ctx.add_option('--log-color', action='store', default=False, help='use color for log output (default: False)')
+    ctx.add_option('--log-color', action='store', default=False,
+            help='use color for log output (default: False)')
 
 
 def configure(ctx):
     ctx.load('g++')
     ctx.load('boost')
 
-    #check_BOOST_THREAD(ctx)
-    #ctx.check_cxx(header_name='boost/shared_ptr.hpp', mandatory=True)
-    ctx.check_boost(lib='serialization system thread program_options', uselib_store='BOOST4LOGGER')
+    ctx.check_boost(lib='serialization system thread program_options',
+            uselib_store='BOOST4LOGGER')
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
     ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
