@@ -184,6 +184,9 @@ public:
 	//! Returns threshold level of the Logger instance
 	size_t getLevel();
 
+	//! Returns whether given log level will produce output
+	bool willBeLogged(size_t level);
+
 	//! Returns threshold level of the Logger instance
 	std::string getLevelStr();
 
@@ -398,6 +401,10 @@ inline const char* Logger::resetColor() const
 #endif // LOG_COLOR_OUTPUT
 
 
+inline bool Logger::willBeLogged(size_t level)
+{
+	return level <= getLevel();
+}
 
 // Basic logger class that features a "prefix" in front of every message
 class PrefixedLogger /* : public LoggerInterface */ {

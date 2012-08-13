@@ -193,7 +193,7 @@ std::string Logger::getFilename()
 
 LogStream& Logger::operator() (size_t level)
 {
-	if(level <= getLevel())
+	if(willBeLogged(level))
 		return resetStreamLevel(level);
 	resetStream(NULL);
 	return getDeafstream();
