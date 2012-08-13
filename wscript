@@ -7,7 +7,8 @@ from symwaf2ic import *
 APPNAME='logger'
 
 def options(ctx):
-    ctx.load('g++')
+    ctx.load('compiler_c')
+    ctx.load('compiler_cxx')
     ctx.load('boost')
 
     ctx.add_option('--log-color', action='store', default=False,
@@ -15,7 +16,8 @@ def options(ctx):
 
 
 def configure(ctx):
-    ctx.load('g++')
+    ctx.load('compiler_c')
+    ctx.load('compiler_cxx')
     ctx.load('boost')
 
     ctx.check_boost(lib='serialization system thread program_options',
