@@ -73,7 +73,7 @@ LogStream& LogStream::reset(LogStream& stream)
 }
 #endif // LOG_COLOR_OUTPUT
 
-void LogStream::setstate ( std::ios_base::iostate state ) { local_stream->setstate(state); }
+void LogStream::setstate(std::ios_base::iostate state) { local_stream->setstate(state); }
 
 void LogStream::clear() { local_stream->clear(); }
 
@@ -114,7 +114,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	logfilename(filename)
 {
 	logdual = dual;
-	deafstream.setstate(std::ios_base::eofbit);
+	getDeafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 #ifdef LOG_MULTI_THREAD
 	loglevel.reset(new size_t(level));
@@ -191,16 +191,12 @@ std::string Logger::getFilename()
 	return logfilename;
 }
 
-bool Logger::willBeLogged(size_t level)
-{
-	return (level <= getLevel());
-}
-
 LogStream& Logger::operator() (size_t level)
 {
-	if(willBeLogged(level))	return resetStreamLevel(level);
+	if(level <= getLevel())
+		return resetStreamLevel(level);
 	resetStream(NULL);
-	return deafstream;
+	return getDeafstream();
 }
 
 LogStream& Logger::flush(LogStream& stream)
@@ -231,7 +227,6 @@ const char* const Logger::buffer[] = {
 boost::shared_ptr<Logger> Logger::log_ptr;
 std::ofstream* Logger::logfile(NULL);
 bool Logger::logdual(false);
-LogStream Logger::deafstream;
 
 #ifdef LOG_MULTI_THREAD
 boost::mutex Logger::init_mutex;
