@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 import sys, os
+from waflib import Options
 sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
 from symwaf2ic import *
 
 APPNAME='logger'
 
-# this should support top-hack and normal building
-from waflib import Options
-(top,out) = tophack(Options.Context.launch_dir)
-
-
 def options(ctx):
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
     ctx.load('boost')
-    ctx.add_option('--log-color', action='store', default=False, help='use color for log output (default: False)')
+
+    ctx.add_option('--log-color', action='store', default=False,
+            help='use color for log output (default: False)')
 
 
 def configure(ctx):
@@ -22,8 +20,8 @@ def configure(ctx):
     ctx.load('compiler_cxx')
     ctx.load('boost')
 
-    check_BOOST_THREAD(ctx)
-    # ECM: check for boost header is obsolete if we already depend on other boost stuff
+    ctx.check_boost(lib='serialization system thread program_options',
+            uselib_store='BOOST4LOGGER')
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
     ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
@@ -37,7 +35,7 @@ def build(bld):
         target          = 'logger_obj',
         source          = 'logger.cpp',
         export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['BOOST_THREAD', 'LOGGER'],
+        use             = ['BOOST4LOGGER', 'LOGGER'],
     )
 
     bld.objects (
