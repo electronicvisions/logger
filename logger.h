@@ -452,6 +452,10 @@ class LoggerMixin
 {
 public:
 	LoggerMixin() : mLog(Logger::instance()) {}
+	LoggerMixin(LoggerMixin const&) : mLog(Logger::instance()) {}
+
+	LoggerMixin& operator=(LoggerMixin const&) { return *this; }
+
 protected:
 	Logger& mLog;
 };
