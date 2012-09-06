@@ -25,9 +25,9 @@ def configure(ctx):
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
     ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
+
     if Options.options.log_color:
         ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
-        ctx.env.color = True
 
 
 def build(bld):

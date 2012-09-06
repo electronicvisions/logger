@@ -1,4 +1,5 @@
-// Singleton implementation of Logger class for symap2ic project
+#pragma once
+// Singleton style Logger implementation
 // by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
 //
@@ -10,23 +11,17 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
-#define LOG_MULTI_THREAD
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <boost/date_time.hpp>
 
-#ifdef LOG_MULTI_THREAD
-#define LOGGER_VERSION "MT"
 #ifndef PYPLUSPLUS
 	#include <boost/thread/thread.hpp>
 	#include <boost/thread/mutex.hpp>
 	#include <boost/thread/tss.hpp>
 #endif
-#else
-#define LOGGER_VERSION "non-MT"
-#endif // LOG_MULTI_THREAD
 
 // Color definitions
 #ifdef LOG_COLOR_OUTPUT
@@ -63,7 +58,7 @@ using std::size_t;
 class LogStream
 {
 protected:
-	std::ostringstream* local_stream;
+	std::ostringstream local_stream;
 	typedef std::ostream& (*stream_manip)(std::ostream&);
 	typedef LogStream& (*log_stream_manip)(LogStream&);
 private:
@@ -80,7 +75,7 @@ public:
 
 	//! Forwards std::ostream& data to the member local_stream
 	template <typename T>
-		LogStream& operator<<(const T& val);
+	LogStream& operator<<(const T& val);
 
 	//! Catches std::ostream format stream manipulators and forward to local stream
 	LogStream& operator<<(stream_manip manip);
@@ -103,13 +98,7 @@ public:
 	static LogStream& reset(LogStream& stream);
 #endif // LOG_COLOR_OUTPUT
 
-	// emulate parts of std::ostringstream interface
 	void setstate(std::ios_base::iostate state);
-	void clear();
-	bool bad();
-	bool eof();
-	bool good();
-	std::streamsize width () const;
 	std::streamsize width (std::streamsize wide);
 	std::string str();
 };
@@ -117,9 +106,9 @@ public:
 
 
 //! Singleton implementation of Logger class
-/*! Only one single instance of this class can be created by calling the public function instance(). 
-  Every further call returns a reference to this one class, arguments will be ignored, i.e. the 
-  parameters loglevel and logfile can not be changed after their first initialization. 
+/*! Only one single instance of this class can be created by calling the public function instance().
+  Every further call returns a reference to this one class, arguments will be ignored, i.e. the
+  parameters loglevel and logfile can not be changed after their first initialization.
   Pre-defined criticality levels are: ERROR, WARNING, INFO, DEBUG0, DEBUG1, DEBUG2, DEBUG3.
   The default criticality threshold of a logger is WARNING. If a message is streamed into the logger,
   it will only be recorded if the criticality of the message is at least as high as the threshold of
@@ -127,59 +116,19 @@ public:
   your message is DEBUG0. */
 class Logger
 {
-private:
-	size_t const static_loglevel;
-#ifdef LOG_MULTI_THREAD
-#ifndef PYPLUSPLUS
-	boost::thread_specific_ptr<LogStream> local_stream;
-	static boost::mutex init_mutex;
-	boost::thread_specific_ptr<size_t> loglevel;
-#endif // PYPLUSPLUS
-#else
-	LogStream* local_stream;
-	size_t* loglevel;
-#endif // LOG_MULTI_THREAD
-	static boost::shared_ptr<Logger> log_ptr;
-
-	static std::ofstream* logfile;
-	std::string logfilename;
-	static bool logdual;
-
-	static LogStream& getDeafstream();
-
-	explicit Logger(size_t level, std::string filename, bool dual);
-	Logger(Logger&);
-
-	// Formatting the log messages
-	std::string getTime();
-#ifdef LOG_COLOR_OUTPUT
-	const char* toColor(size_t level) const;
-	const char* resetColor() const;
-#endif // LOG_COLOR_OUTPUT
-	LogStream& formatStream(size_t level);
-	//! Contains the criticality tags for stream formatting
-	static const char* const buffer[];
-
-	//! Flush the old local stream and establish a new local string
-	void resetStream(LogStream* stream);
-	//! Flush the old local stream and establish a new formated local string with level tag
-	LogStream& resetStreamLevel(size_t level);
-
 public:
-	~Logger();
-
-	/*! The criticality levels of this logger class. 
-	  Messages streamed into the logger will only be recorded if their criticality is at least the 
+	/*! The criticality levels of this logger class.
+	  Messages streamed into the logger will only be recorded if their criticality is at least the
 	  criticality level of the logger. */
 	enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
-	/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance, 
+	/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance,
 	  all further calls return a reference to the one and only instance. */
 	static Logger& instance(
 			size_t level=DEFAULT_LOG_THRESHOLD,  //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
 			std::string filename="",             //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 			bool dual=false
-			);
+		);
 
 	//! Returns threshold level of the Logger instance
 	size_t getLevel();
@@ -198,33 +147,11 @@ public:
 
 	//! Stream operator for data in multi-line comments
 	template <typename T>
-		LogStream& operator<<(const T& val)
-		{
-#ifndef PYPLUSPLUS
-#ifdef LOG_MULTI_THREAD
-			if (local_stream.get())
-#else
-			if (local_stream)
-#endif // LOG_MULTI_THREAD
-				return *local_stream << val;
-#endif // !PYPLUSPLUS
-			return getDeafstream();
-		}
+	LogStream& operator<<(const T& val);
 
 	//! Catches stream manupulators like std::ostream manipulators or LogStream stream manipulators in multi-line comments
 	template <typename T>
-		LogStream& operator<<(T& (*__fp)(T&))
-		{
-#ifndef PYPLUSPLUS
-#ifdef LOG_MULTI_THREAD
-			if(local_stream.get())
-#else
-			if (local_stream)
-#endif // LOG_MULTI_THREAD
-				return *local_stream << __fp;
-#endif // !PYPLUSPLUS
-			return getDeafstream();
-		}
+	LogStream& operator<<(T& (*__fp)(T&));
 
 	//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
 	static LogStream& flush(LogStream& stream);
@@ -245,17 +172,54 @@ public:
 	};
 
 private:
+	size_t const static_loglevel;
+
+#ifndef PYPLUSPLUS
+	boost::thread_specific_ptr<LogStream> local_stream;
+	static boost::mutex init_mutex;
+	boost::thread_specific_ptr<size_t> loglevel;
+#endif // PYPLUSPLUS
+
+	static boost::scoped_ptr<Logger> _instance;
+
+	static std::ofstream logfile;
+	std::string logfilename;
+	static bool logdual;
+
+	static LogStream& getDeafstream();
+
+	explicit Logger(size_t level, std::string filename, bool dual);
+	Logger(Logger const&);
+	~Logger();
+
+#ifdef LOG_COLOR_OUTPUT
+	const char* toColor(size_t level) const;
+	const char* resetColor() const;
+#endif // LOG_COLOR_OUTPUT
+
+	LogStream& formatStream(size_t level);
+	//! Contains the criticality tags for stream formatting
+	static const char* const buffer[];
+
+	//! Flush the old local stream and establish a new local string
+	void resetStream(LogStream* stream);
+	//! Flush the old local stream and establish a new formated local string with level tag
+	LogStream& resetStreamLevel(size_t level);
+
 	//! provide private interface for LogStream class
 	friend class LogStream;
 	friend class Logger::AlterLevel;
+
+	template<typename T>
+	friend void boost::checked_delete(T*);
 };
 
 
 template <typename T>
 LogStream& LogStream::operator<<(const T& val)
 {
-	if (local_stream->bad()) return Logger::getDeafstream();
-	*local_stream << val;
+	if (local_stream.bad()) return Logger::getDeafstream();
+	local_stream << val;
 	return *this;
 }
 
@@ -267,43 +231,41 @@ inline LogStream& Logger::getDeafstream()
 
 inline std::ostream& LogStream::getOutStream()
 {
-	if (Logger::logfile) return *(Logger::logfile);
+	if (Logger::logfile.is_open()) return Logger::logfile;
 	return std::cout;
 }
 
 inline void LogStream::writeOut()
 {
-	if (!local_stream->bad())
+	if (!local_stream.bad())
 	{
-		*local_stream << std::endl;
-		getOutStream() << local_stream->str();
+		local_stream << std::endl;
+		getOutStream() << local_stream.str();
 		if (Logger::logdual)
-			std::cout << local_stream->str();
+			std::cout << local_stream.str();
 	}
 }
 
 inline LogStream& LogStream::flush(LogStream& stream)
 {
 	stream.writeOut();
-	stream.local_stream->setstate(std::ios_base::badbit);
+	stream.local_stream.setstate(std::ios_base::badbit);
 	return stream;
 }
 
 inline LogStream& Logger::formatStream(size_t level)
 {
+	using boost::posix_time::microsec_clock;
 #ifndef PYPLUSPLUS
 #ifdef LOG_COLOR_OUTPUT
-	*local_stream << COLOR_RESET << getTime();
-#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
+	*local_stream << COLOR_RESET;
+	*local_stream << microsec_clock::local_time() << " ";
 	*local_stream << toColor(level);
-#endif //WIN32
 	local_stream->width(10);
 	*local_stream << std::left << buffer[level];
-#if not defined(WIN32) || not defined(_WIN32) || not defined(__WIN32__)
 	*local_stream << resetColor() << ": ";
-#endif //WIN32
 #else // LOG_COLOR_OUTPUT
-	*local_stream  << getTime();
+	*local_stream  << microsec_clock::local_time() << " ";
 	local_stream->width(10);
 	*local_stream << std::left << buffer[level] << ": ";
 #endif // LOG_COLOR_OUTPUT
@@ -314,72 +276,46 @@ inline LogStream& Logger::formatStream(size_t level)
 
 inline void Logger::resetStream(LogStream* stream)
 {
-#ifdef LOG_MULTI_THREAD
 #ifndef PYPLUSPLUS
 	local_stream.reset(stream);
 #endif
-#else
-	delete local_stream;
-	local_stream = stream;
-#endif // LOG_MULTI_THREAD
 }
 
 inline LogStream& Logger::resetStreamLevel(size_t level)
 {
 	resetStream(new LogStream);
-	if (logfile) logfile->flush();
 	return formatStream(level);
 }
 
 
 inline size_t Logger::getLevel() {
 #ifndef PYPLUSPLUS
-#ifdef LOG_MULTI_THREAD
 	if (!loglevel.get())
 		loglevel.reset(new size_t(static_loglevel));
-#else
-#endif // LOG_MULTI_THREAD
-	return *loglevel;
 #endif // !PYPLUSPLUS
 }
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 
-#include <windows.h>
-
-inline std::string Logger::getTime()
+template <typename T>
+LogStream& Logger::operator<<(const T& val)
 {
-	const int MAX_LEN = 200;
-	char buffer[MAX_LEN];
-	if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0,
-				"HH':'mm':'ss", buffer, MAX_LEN) == 0)
-		return "Error in Logger::getTime()";
-
-	char result[100] = {0};
-	static DWORD first = GetTickCount();
-	std::sprintf(result, "%s.%03ld ", buffer, (long)(GetTickCount() - first) % 1000);
-	return result;
+#ifndef PYPLUSPLUS
+	if (local_stream.get())
+		return *local_stream << val;
+#endif // !PYPLUSPLUS
+	return getDeafstream();
 }
 
-#else
-
-#include <sys/time.h>
-
-inline std::string Logger::getTime()
+//! Catches stream manupulators like std::ostream manipulators or LogStream stream manipulators in multi-line comments
+template <typename T>
+LogStream& Logger::operator<<(T& (*__fp)(T&))
 {
-	char buffer[40];
-	time_t t;
-	time(&t);
-	tm r;
-	strftime(buffer, sizeof(buffer), "%y-%m-%d %X", localtime_r(&t, &r));
-	struct timeval tv;
-	gettimeofday(&tv, 0);
-	char result[100] = {0};
-	std::sprintf(result, "%s.%03ld ", buffer, (long)tv.tv_usec / 1000);
-	return result;
+#ifndef PYPLUSPLUS
+	if(local_stream)
+		return *local_stream << __fp;
+#endif // !PYPLUSPLUS
+	return getDeafstream();
 }
-
-#endif //WIN32
 
 #ifdef LOG_COLOR_OUTPUT
 inline const char* Logger::toColor(size_t level) const
@@ -405,6 +341,9 @@ inline bool Logger::willBeLogged(size_t level)
 {
 	return level <= getLevel();
 }
+
+
+
 
 // Basic logger class that features a "prefix" in front of every message
 class PrefixedLogger /* : public LoggerInterface */ {

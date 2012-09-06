@@ -6,24 +6,22 @@
 // Class LogStream
 // -------------------------
 
-LogStream::LogStream() : local_stream(new std::ostringstream) {}
+LogStream::LogStream() : local_stream() {}
 
 LogStream::~LogStream()
 {
-	this->writeOut();
-	delete local_stream;
-	local_stream=NULL;
+	writeOut();
 }
 
 LogStream& LogStream::operator<<(LogStream& val)
 {
-	*local_stream << val.str();
+	local_stream << val.str();
 	return *this;
 }
 
 LogStream& LogStream::operator<<(stream_manip manip)
 {
-	manip(*local_stream);
+	manip(local_stream);
 	return *this;
 }
 LogStream& LogStream::operator<<(log_stream_manip manip)
@@ -73,72 +71,51 @@ LogStream& LogStream::reset(LogStream& stream)
 }
 #endif // LOG_COLOR_OUTPUT
 
-void LogStream::setstate(std::ios_base::iostate state) { local_stream->setstate(state); }
-
-void LogStream::clear() { local_stream->clear(); }
-
-bool LogStream::bad() { return local_stream->bad(); }
-
-bool LogStream::eof() { return local_stream->eof(); }
-
-bool LogStream::good() { return local_stream->good(); }
-
-std::streamsize LogStream::width () const
-{
-	return local_stream->width();
-}
-
 std::streamsize LogStream::width (std::streamsize wide)
 {
-	local_stream->width(wide);
+	local_stream.width(wide);
 	return wide;
 }
 
-std::string LogStream::str() { return local_stream->str(); }
+void LogStream::setstate(std::ios_base::iostate state)
+{
+	local_stream.setstate(state);
+}
+
+std::string LogStream::str()
+{
+	return local_stream.str();
+}
 
 
 // -------------------------
 // Class Logger
 // -------------------------
-#ifdef LOG_MULTI_THREAD
 Logger::Logger(size_t level, std::string filename, bool dual) :
 	static_loglevel(level),
 	local_stream(),
 	loglevel(),
-#else
-Logger::Logger(size_t level, std::string filename, bool dual) :
-	static_loglevel(level),
-	local_stream(NULL),
-	loglevel(NULL),
-#endif // LOG_MULTI_THREAD
 	logfilename(filename)
 {
 	logdual = dual;
 	getDeafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
-#ifdef LOG_MULTI_THREAD
 	loglevel.reset(new size_t(level));
-#else
-	loglevel = new size_t(level);
-#endif // LOG_MULTI_THREAD
 
-	if (logfilename != "")
-	{
-		logfile = new std::ofstream;
-		logfile->open(logfilename.c_str(), (std::fstream::out | std::fstream::binary) );
-		if (!logfile->is_open())
-			throw std::runtime_error("Logger::ERROR: unable to open given logfile");
-	}
-	else
-	{
-		if (dual)
-			throw std::runtime_error("Logger::ERROR: to use dual logging mode you need to provide a filename");
-	}
-	*local_stream << "*** Started logging (" << LOGGER_VERSION << ") @" << getTime() << \
-		"with log level: " << buffer[level] << " ***" << Logger::flush;
+	if (!logfilename.empty())
+		logfile.open(logfilename.c_str(), std::fstream::out | std::fstream::binary);
+
+	if (logfilename.empty() && dual)
+		throw std::runtime_error("dual logging requires file name");
+
+	*local_stream << "*** Started logging @";
+	*local_stream << boost::posix_time::second_clock::local_time();
+	*local_stream << "with log level: " << buffer[level];
+	*local_stream << " ***" << Logger::flush;
 }
 
-Logger::Logger(Logger&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
+// hidden copy constructor
+Logger::Logger(Logger const&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
 
 
 
@@ -146,22 +123,11 @@ Logger::Logger(Logger&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
 Logger::~Logger()
 {
 	resetStream(NULL);
-	if(logfile)
-	{
-		if(logfile->is_open())
-		{
-			logfile->flush();
-			logfile->close();
-		}
-		delete logfile;
-		logfile = 0;
+	if (logfile.is_open()) {
+		logfile.flush();
+		logfile.close();
 	}
-#ifdef LOG_MULTI_THREAD
 	loglevel.reset();
-#else
-	delete loglevel;
-#endif // LOG_MULTI_THREAD
-	log_ptr.reset(static_cast<Logger*>(NULL));
 }
 
 Logger& Logger::instance(
@@ -170,15 +136,14 @@ Logger& Logger::instance(
 		bool dual
 		)
 {
-#ifdef LOG_MULTI_THREAD
 	boost::mutex::scoped_lock lock(init_mutex);
-#endif // LOG_MULTI_THREAD
-	if(!log_ptr)
+
+	if(!_instance)
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
-		log_ptr = boost::shared_ptr<Logger> (new Logger(level, filename, dual));
+		_instance.reset(new Logger(level, filename, dual));
 	}
-	return *log_ptr;
+	return *_instance;
 }
 
 std::string Logger::getLevelStr()
@@ -222,12 +187,9 @@ const char* const Logger::buffer[] = {
 	"DEBUG0", "DEBUG1", "DEBUG2",
 	"DEBUG3" };
 
-// Allocating and initializing Logger's static data member.  
+// Allocating and initializing Logger's static data member.
 // The smart pointer is allocated - not the object itself.
-boost::shared_ptr<Logger> Logger::log_ptr;
-std::ofstream* Logger::logfile(NULL);
+boost::scoped_ptr<Logger> Logger::_instance;
+std::ofstream Logger::logfile;
 bool Logger::logdual(false);
-
-#ifdef LOG_MULTI_THREAD
 boost::mutex Logger::init_mutex;
-#endif // LOG_MULTI_THREAD
