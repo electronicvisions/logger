@@ -311,7 +311,7 @@ template <typename T>
 LogStream& Logger::operator<<(T& (*__fp)(T&))
 {
 #ifndef PYPLUSPLUS
-	if(local_stream)
+	if(local_stream.get())
 		return *local_stream << __fp;
 #endif // !PYPLUSPLUS
 	return getDeafstream();
