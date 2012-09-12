@@ -292,6 +292,7 @@ inline size_t Logger::getLevel() {
 #ifndef PYPLUSPLUS
 	if (!loglevel.get())
 		loglevel.reset(new size_t(static_loglevel));
+	return *loglevel;
 #endif // !PYPLUSPLUS
 }
 
