@@ -97,20 +97,21 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	loglevel(),
 	logfilename(filename)
 {
+	bool logdual = getLogdual();
 	logdual = dual;
 	getDeafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 	loglevel.reset(new size_t(level));
 
 	if (!logfilename.empty())
-		logfile.open(logfilename.c_str(), std::fstream::out | std::fstream::binary);
+		getLogfile().open(logfilename.c_str(), std::fstream::out | std::fstream::binary);
 
 	if (logfilename.empty() && dual)
 		throw std::runtime_error("dual logging requires file name");
 
 	*local_stream << "*** Started logging @";
 	*local_stream << boost::posix_time::second_clock::local_time();
-	*local_stream << "with log level: " << buffer[level];
+	*local_stream << "with log level: " << getBuffer()[level];
 	*local_stream << " ***" << Logger::flush;
 }
 
@@ -123,9 +124,9 @@ Logger::Logger(Logger const&) : static_loglevel(DEFAULT_LOG_THRESHOLD) {}
 Logger::~Logger()
 {
 	resetStream(NULL);
-	if (logfile.is_open()) {
-		logfile.flush();
-		logfile.close();
+	if (getLogfile().is_open()) {
+		getLogfile().flush();
+		getLogfile().close();
 	}
 	loglevel.reset();
 }
@@ -136,19 +137,19 @@ Logger& Logger::instance(
 		bool dual
 		)
 {
-	boost::mutex::scoped_lock lock(init_mutex);
+	boost::mutex::scoped_lock lock(getInit_mutex());
 
-	if(!_instance)
+	if(!_getInstance())
 	{
 		if ( level > DEBUG3 ) level = DEBUG3;
-		_instance.reset(new Logger(level, filename, dual));
+		_getInstance().reset(new Logger(level, filename, dual));
 	}
-	return *_instance;
+	return *_getInstance();
 }
 
 std::string Logger::getLevelStr()
 {
-	return std::string(buffer[getLevel()]);
+	return std::string(getBuffer()[getLevel()]);
 }
 
 std::string Logger::getFilename()
@@ -182,14 +183,5 @@ Logger::AlterLevel::~AlterLevel()
 	*log.loglevel = old_level;
 }
 
-const char* const Logger::buffer[] = {
-	"ERROR", "WARNING", "INFO",
-	"DEBUG0", "DEBUG1", "DEBUG2",
-	"DEBUG3" };
-
-// Allocating and initializing Logger's static data member.
-// The smart pointer is allocated - not the object itself.
-boost::scoped_ptr<Logger> Logger::_instance;
-std::ofstream Logger::logfile;
-bool Logger::logdual(false);
-boost::mutex Logger::init_mutex;
+// Allocating and initializing Logger's static data member
+// ECM: Don't you dare!!! GETTER for every f***ing single static member!
