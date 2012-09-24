@@ -1,48 +1,41 @@
 #!/usr/bin/env python
 import sys, os
 from waflib import Options
-sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
+symap2ic = os.environ.get('SYMAP2IC_PATH')
+sys.path.insert(0, os.path.join(symap2ic, 'src/waf'))
 from symwaf2ic import *
+
+components = [os.path.join(symap2ic , 'components', 'chatty'), ]
+recurse    = lambda ctx : map(lambda proj: ctx.recurse(proj), components)
 
 APPNAME='logger'
 
 def options(ctx):
-    ctx.load('compiler_c')
-    ctx.load('compiler_cxx')
-    ctx.load('boost')
+    #ctx.add_option('--log-color', action='store', default=False,
+            #help='use color for log output (default: False)')
 
-    ctx.add_option('--log-color', action='store', default=False,
-            help='use color for log output (default: False)')
-
+    recurse(ctx)
 
 def configure(ctx):
-    ctx.load('compiler_c')
-    ctx.load('compiler_cxx')
-    ctx.load('boost')
+    #if Options.options.log_color:
+        #ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
 
-    ctx.check_boost(lib='serialization system thread program_options',
-            uselib_store='BOOST4LOGGER')
-
-    ctx.env.INCLUDES_LOGGER    = ['.',]
-    ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
-
-    if Options.options.log_color:
-        ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
-
+    recurse(ctx)
 
 def build(bld):
-    bld.objects (
+    recurse(bld)
+
+    bld (
         target          = 'logger_obj',
-        source          = 'logger.cpp',
-        export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['BOOST4LOGGER', 'LOGGER'],
+        export_includes = '.',
+        use             = ['chatty'],
     )
 
-    bld.objects (
-        target          = 'logger_c_obj',
-        source          = 'logger_c.cpp',
-        export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['logger_obj', ],
+    bld(
+        features        = 'cxx cxxprogram',
+        source          = 'usage_example/main.cpp',
+        target          = 'logger_example',
+        use             = ['logger_obj'],
+        install_path    = None,
+        cxxflags        = ['-std=c++0x',],
     )
-
-    bld.recurse('usage_example')
