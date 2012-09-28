@@ -2,8 +2,10 @@
 // Singleton style Logger implementation
 // by Sebastian Jeltsch, sjeltsch@kip.uni-heidelberg.de
 // by Daniel Bruederle, bruederle@kip.uni-heidelberg.de
+// frequent fixing by Eric Müller, mueller@kip.uni-heidelberg.de
 //
 // IMMER LOGGER BLEIBEN!
+// Schoen waer's... langsam werd ich unlogger!!!
 //
 // 2010-03-01
 
@@ -176,15 +178,17 @@ private:
 
 #ifndef PYPLUSPLUS
 	boost::thread_specific_ptr<LogStream> local_stream;
-	static boost::mutex init_mutex;
+	static boost::mutex& getInit_mutex();
 	boost::thread_specific_ptr<size_t> loglevel;
 #endif // PYPLUSPLUS
 
-	static boost::scoped_ptr<Logger> _instance;
+	static boost::scoped_ptr<Logger>& _getInstance();
 
-	static std::ofstream logfile;
+	static std::ofstream& getLogfile();
+
 	std::string logfilename;
-	static bool logdual;
+
+	static bool& getLogdual();
 
 	static LogStream& getDeafstream();
 
@@ -199,7 +203,7 @@ private:
 
 	LogStream& formatStream(size_t level);
 	//! Contains the criticality tags for stream formatting
-	static const char* const buffer[];
+	static char const * const * getBuffer();
 
 	//! Flush the old local stream and establish a new local string
 	void resetStream(LogStream* stream);
@@ -223,6 +227,38 @@ LogStream& LogStream::operator<<(const T& val)
 	return *this;
 }
 
+#ifndef PYPLUSPLUS // due to ifdefing of the declaration
+inline boost::mutex& Logger::getInit_mutex() {
+	static boost::mutex init_mutex;
+	return init_mutex;
+}
+#endif
+
+inline boost::scoped_ptr<Logger>& Logger::_getInstance() {
+	// The smart pointer is allocated - not the object itself.
+	static boost::scoped_ptr<Logger> _instance;
+	return _instance;
+}
+
+inline std::ofstream& Logger::getLogfile() {
+	static std::ofstream logfile;
+	return logfile;
+}
+
+inline bool& Logger::getLogdual() {
+	static bool logdual = false;
+	return logdual;
+}
+
+inline char const * const * Logger::getBuffer() {
+	static char const * const buffer[] = {
+		"ERROR", "WARNING", "INFO",
+		"DEBUG0", "DEBUG1", "DEBUG2",
+		"DEBUG3"
+	};
+	return buffer;
+}
+
 inline LogStream& Logger::getDeafstream()
 {
 	static LogStream deafstream;
@@ -231,7 +267,7 @@ inline LogStream& Logger::getDeafstream()
 
 inline std::ostream& LogStream::getOutStream()
 {
-	if (Logger::logfile.is_open()) return Logger::logfile;
+	if (Logger::getLogfile().is_open()) return Logger::getLogfile();
 	return std::cout;
 }
 
@@ -241,7 +277,7 @@ inline void LogStream::writeOut()
 	{
 		local_stream << std::endl;
 		getOutStream() << local_stream.str();
-		if (Logger::logdual)
+		if (Logger::getLogdual())
 			std::cout << local_stream.str();
 	}
 }
@@ -267,7 +303,7 @@ inline LogStream& Logger::formatStream(size_t level)
 #else // LOG_COLOR_OUTPUT
 	*local_stream  << microsec_clock::local_time() << " ";
 	local_stream->width(10);
-	*local_stream << std::left << buffer[level] << ": ";
+	*local_stream << std::left << getBuffer()[level] << ": ";
 #endif // LOG_COLOR_OUTPUT
 
 	return *local_stream;
