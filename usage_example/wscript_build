@@ -11,6 +11,14 @@ usage_example = bld(
 )
 
 usage_example = bld(
+    features     = 'cxx cxxprogram',
+    source       = 'dual_test.cpp',
+    target       = 'logdualtest',
+    use          = ['logger_obj'],
+    install_path = None,
+)
+
+usage_example = bld(
     # ECM: c -> cxx fixes a problem with gold-linker on old lucid installs... *hack*
     features     = 'cxx cxxprogram',
     source       = 'main_c.c',
