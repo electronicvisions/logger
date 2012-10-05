@@ -20,6 +20,7 @@ def configure(ctx):
     ctx.load('compiler_cxx')
     ctx.load('boost')
 
+    ctx.fix_boost_paths()
     ctx.check_boost(lib='serialization system thread program_options',
             uselib_store='BOOST4LOGGER')
 
