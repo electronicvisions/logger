@@ -25,18 +25,20 @@ def configure(ctx):
             uselib_store='BOOST4LOGGER')
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
-    ctx.env.CXXFLAGS_LOGGER    = ['-O0', '-g', '-fPIC']
 
     if Options.options.log_color:
         ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
 
 
 def build(bld):
+    OBJCXXFLAGS = [ '-fPIC', '-O0', '-g' ]
+
     bld.objects (
         target          = 'logger_obj',
         source          = 'logger.cpp',
         export_includes = bld.env.INCLUDES_LOGGER,
         use             = ['BOOST4LOGGER', 'LOGGER'],
+        cxxflags        = OBJCXXFLAGS,
     )
 
     bld.objects (
@@ -44,6 +46,7 @@ def build(bld):
         source          = 'logger_c.cpp',
         export_includes = bld.env.INCLUDES_LOGGER,
         use             = ['logger_obj', ],
+        cxxflags        = OBJCXXFLAGS,
     )
 
     bld.recurse('usage_example')
