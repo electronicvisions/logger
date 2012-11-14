@@ -97,8 +97,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	loglevel(),
 	logfilename(filename)
 {
-	bool logdual = getLogdual();
-	logdual = dual;
+	getLogdual() = dual;
 	getDeafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
 	loglevel.reset(new size_t(level));
