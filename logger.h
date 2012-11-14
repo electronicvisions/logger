@@ -155,7 +155,7 @@ public:
 	template <typename T>
 	LogStream& operator<<(T& (*__fp)(T&));
 
-	//! Forced flush; ATTENTION afterwards the multi-line feature won't work anymore
+	//! Forced flush; afterwards the multi-line feature won't work anymore
 	static LogStream& flush(LogStream& stream);
 
 	// allows for log level escalation (RAII-style)
@@ -234,7 +234,12 @@ inline boost::mutex& Logger::getInit_mutex() {
 }
 #endif
 
-inline boost::scoped_ptr<Logger>& Logger::_getInstance() {
+inline boost::scoped_ptr<Logger>& Logger::_getInstance()
+{
+	// this line is necessaray, otherwise file will be destructed before logger
+	// and last line will never hit the file;
+	Logger::getLogfile();
+
 	// The smart pointer is allocated - not the object itself.
 	static boost::scoped_ptr<Logger> _instance;
 	return _instance;
