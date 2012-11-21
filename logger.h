@@ -1,12 +1,11 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+#include <cassert>
 #include <string>
 
 #include <boost/scoped_ptr.hpp>
 #include <log4cxx/logger.h>
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
 
 struct Stream
 {
@@ -29,7 +28,7 @@ private:
 	static log4cxx::Logger& getLogger(size_t level = LOGGER_DEAULT_LEVEL)
 	{
 		static bool _initalized = false;
-		static log4cxx::Logger* _logger = nullptr;
+		static log4cxx::Logger* _logger = NULL;
 		if (!_initalized) {
 			// never ever touch the amazing &* ;)
 			//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
@@ -93,8 +92,7 @@ public:
 	//! Returns threshold level of the Logger instance
 	size_t getLevel()
 	{
-		if (!getLogger().getLevel())
-			return 0;
+		assert(getLogger().getLevel() && "init of log4cxx::logger is broken");
 		return getLogger().getLevel()->toInt();
 	}
 

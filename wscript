@@ -37,6 +37,6 @@ def build(bld):
         target          = 'logger_example',
         use             = ['logger_obj'],
         install_path    = None,
-        cxxflags        = ['-std=c++0x',],
+        cxxflags        = [],
         lib             = ['log4cxx',],
     )
