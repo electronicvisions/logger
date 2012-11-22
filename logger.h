@@ -4,79 +4,72 @@
 #include <cassert>
 #include <string>
 
-#include <boost/scoped_ptr.hpp>
+#include <boost/thread/tss.hpp>
 #include <log4cxx/logger.h>
 
-struct Stream
+
+#define LOGGER_DEAULT_LEVEL Logger::WARNING
+
+/// gets the "Default" instance from log4cxx
+log4cxx::Logger&
+get_log4cxx(log4cxx::LevelPtr level = log4cxx::Level::getWarn());
+
+struct Message
 {
 	std::ostringstream& get() { return _stream; }
-	size_t level() const { return _level; }
+	log4cxx::LevelPtr level() const { return _level; }
 
-	Stream(size_t level = 0) :
+	Message(log4cxx::LevelPtr level) :
 		_level(level), _stream() {}
 
+	~Message()
+	{
+		// do the actual logging
+		get_log4cxx().forcedLog(level(), get().str(), LOG4CXX_LOCATION);
+	}
+
 private:
-	size_t _level;
+	log4cxx::LevelPtr _level;
 	std::ostringstream _stream;
 };
 
-#define LOGGER_DEAULT_LEVEL WARNING
+
+struct NullStream :
+	public std::ostream
+{
+	struct nullbuf : public std::streambuf
+	{
+		int overflow(int c) { return traits_type::not_eof(c); }
+	} m_sbuf;
+
+	NullStream() : std::ios(&m_sbuf), std::ostream(&m_sbuf) {}
+};
+
 
 class Logger
 {
 private:
-	static log4cxx::Logger& getLogger(size_t level = LOGGER_DEAULT_LEVEL)
-	{
-		static bool _initalized = false;
-		static log4cxx::Logger* _logger = NULL;
-		if (!_initalized) {
-			// never ever touch the amazing &* ;)
-			//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
-			_logger = &*log4cxx::Logger::getLogger("Default");
-			_logger->setLevel(levelPtr(level));
-		}
-		return *_logger;
-	}
-
-	boost::scoped_ptr<Stream> _buffer;
-	std::ofstream _null;
+	boost::thread_specific_ptr<Message> _buffer;
+	NullStream _null;
 
 	Logger(size_t level = LOGGER_DEAULT_LEVEL) :
-		_buffer(new Stream),
-		_null("/dev/null")
-	{}
-
-	inline
-	static log4cxx::LevelPtr levelPtr(int level)
+		_buffer(),
+		_null()
 	{
-		using log4cxx::Level;
-		switch (level) {
-			case FATAL:
-				return Level::getFatal();
-			case ERROR:
-				return Level::getError();
-			case WARNING:
-				return Level::getWarn();
-			case INFO:
-				return Level::getInfo();
-			case DEBUG:
-				return Level::getDebug();
-			default:
-				return Level::getTrace();
-		}
+		_buffer.reset(new Message(log4cxx::Level::toLevel(level)));
 	}
 
 public:
 	enum levels {
-		FATAL   = 0,
-		ERROR   = 1,
-		WARNING = 2,
-		INFO    = 3,
-		DEBUG   = 4,
+		FATAL   = log4cxx::Level::FATAL_INT,
+		ERROR   = log4cxx::Level::ERROR_INT,
+		WARNING = log4cxx::Level::WARN_INT,
+		INFO    = log4cxx::Level::INFO_INT,
+		DEBUG   = log4cxx::Level::DEBUG_INT,
 		DEBUG0  = DEBUG,
-		DEBUG1  = DEBUG,
-		DEBUG2  = DEBUG,
-		DEBUG3  = DEBUG
+		DEBUG1  = log4cxx::Level::TRACE_INT,
+		DEBUG2  = log4cxx::Level::ALL_INT,
+		DEBUG3  = DEBUG2
 	};
 
 	static Logger& instance(
@@ -84,7 +77,7 @@ public:
 			std::string file = "",
 			bool dual = false)
 	{
-		Logger::getLogger(level);
+		get_log4cxx(log4cxx::Level::toLevel(level));
 		static Logger _logger(level);
 		return _logger;
 	}
@@ -92,20 +85,21 @@ public:
 	//! Returns threshold level of the Logger instance
 	size_t getLevel()
 	{
-		assert(getLogger().getLevel() && "init of log4cxx::logger is broken");
-		return getLogger().getLevel()->toInt();
+		assert(get_log4cxx().getLevel() && "init of log4cxx::logger is broken");
+		return get_log4cxx().getLevel()->toInt();
 	}
 
 	//! Returns whether given log level will produce output
 	bool willBeLogged(size_t level)
 	{
-		return level <= getLevel();
+		return level >= getLevel();
 	}
 
 	//! Returns threshold level of the Logger instance
 	std::string getLevelStr()
 	{
-		return getLogger().getLevel()->toString();
+		assert(get_log4cxx().getLevel() && "init of log4cxx::logger is broken");
+		return get_log4cxx().getLevel()->toString();
 	}
 
 	//! Returns filename of the output file
@@ -118,15 +112,9 @@ public:
 	typename std::ostream&
 	operator() (size_t level = DEBUG0)
 	{
-		if (willBeLogged(level)) {
-			getLogger().forcedLog(
-				//::log4cxx::Level(_buffer->level()),
-				::log4cxx::Level::getInfo(),
-				_buffer->get().str(),
-				LOG4CXX_LOCATION);
-
-			_buffer.reset(new Stream(level));
-
+		if (willBeLogged(level))
+		{
+			_buffer.reset(new Message(log4cxx::Level::toLevel(level)));
 			return _buffer->get();
 		}
 
@@ -158,3 +146,19 @@ public:
 protected:
 	Logger& mLog;
 };
+
+
+inline
+log4cxx::Logger&
+get_log4cxx(log4cxx::LevelPtr level)
+{
+	static bool _initalized = false;
+	static log4cxx::Logger* _logger = NULL;
+	if (!_initalized) {
+		// never ever touch the allmighty &* ;)
+		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
+		_logger = &*log4cxx::Logger::getLogger("Default");
+		_logger->setLevel(level);
+	}
+	return *_logger;
+}
