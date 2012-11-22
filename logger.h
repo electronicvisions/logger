@@ -1,18 +1,27 @@
 #pragma once
-#include <fstream>
-#include <iostream>
+#include <sstream>
 #include <cassert>
 #include <string>
+#include <stdexcept>
 
 #include <boost/thread/tss.hpp>
+
 #include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+#include <log4cxx/consoleappender.h>
+#include <log4cxx/fileappender.h>
+#include <log4cxx/simplelayout.h>
 
 
 #define LOGGER_DEAULT_LEVEL Logger::WARNING
 
 /// gets the "Default" instance from log4cxx
 log4cxx::Logger&
-get_log4cxx(log4cxx::LevelPtr level = log4cxx::Level::getWarn());
+get_log4cxx(
+	// don't change default argument. It's an empty "smart" pointer on purpose
+	log4cxx::LevelPtr level = log4cxx::LevelPtr(),
+	std::string fname = std::string(),
+	bool dual = false);
 
 struct Message
 {
@@ -25,7 +34,7 @@ struct Message
 	~Message()
 	{
 		// do the actual logging
-		get_log4cxx().forcedLog(level(), get().str(), LOG4CXX_LOCATION);
+		get_log4cxx().log(level(), get().str(), LOG4CXX_LOCATION);
 	}
 
 private:
@@ -55,9 +64,7 @@ private:
 	Logger(size_t level = LOGGER_DEAULT_LEVEL) :
 		_buffer(),
 		_null()
-	{
-		_buffer.reset(new Message(log4cxx::Level::toLevel(level)));
-	}
+	{}
 
 public:
 	enum levels {
@@ -77,7 +84,7 @@ public:
 			std::string file = "",
 			bool dual = false)
 	{
-		get_log4cxx(log4cxx::Level::toLevel(level));
+		get_log4cxx(log4cxx::Level::toLevel(level), file, dual);
 		static Logger _logger(level);
 		return _logger;
 	}
@@ -150,11 +157,29 @@ protected:
 
 inline
 log4cxx::Logger&
-get_log4cxx(log4cxx::LevelPtr level)
+get_log4cxx(log4cxx::LevelPtr level,
+	std::string fname, bool dual)
 {
-	static bool _initalized = false;
-	static log4cxx::Logger* _logger = NULL;
-	if (!_initalized) {
+	static log4cxx::Logger* _logger;
+	if (!_logger)
+	{
+		if (fname.empty() && dual)
+			throw std::logic_error("dual log mode requires a filename");
+
+		if (fname.empty() || dual)
+		{
+			log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(
+				log4cxx::LayoutPtr(new log4cxx::SimpleLayout()));
+			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
+		}
+
+		if (!fname.empty())
+		{
+			log4cxx::FileAppender* file = new log4cxx::FileAppender(
+				log4cxx::LayoutPtr(new log4cxx::SimpleLayout()), "logfile", false);
+			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
+		}
+
 		// never ever touch the allmighty &* ;)
 		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
 		_logger = &*log4cxx::Logger::getLogger("Default");
