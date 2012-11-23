@@ -60,31 +60,43 @@ class Logger
 private:
 	boost::thread_specific_ptr<Message> _buffer;
 	NullStream _null;
+	size_t _level;
 
 	Logger(size_t level = LOGGER_DEAULT_LEVEL) :
 		_buffer(),
-		_null()
+		_null(),
+		_level(level)
 	{}
 
+	static
+	log4cxx::LevelPtr log4cxx_level(size_t level)
+	{
+		switch(level)
+		{
+			case ERROR:
+				return log4cxx::Level::getError();
+			case WARNING:
+				return log4cxx::Level::getWarn();
+			case INFO:
+				return log4cxx::Level::getInfo();
+			case DEBUG0:
+				return log4cxx::Level::getDebug();
+			case DEBUG1:
+				return log4cxx::Level::getTrace();
+			default:
+				return log4cxx::Level::getAll();
+		}
+	}
+
 public:
-	enum levels {
-		FATAL   = log4cxx::Level::FATAL_INT,
-		ERROR   = log4cxx::Level::ERROR_INT,
-		WARNING = log4cxx::Level::WARN_INT,
-		INFO    = log4cxx::Level::INFO_INT,
-		DEBUG   = log4cxx::Level::DEBUG_INT,
-		DEBUG0  = DEBUG,
-		DEBUG1  = log4cxx::Level::TRACE_INT,
-		DEBUG2  = log4cxx::Level::ALL_INT,
-		DEBUG3  = DEBUG2
-	};
+	enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
 	static Logger& instance(
 			size_t level = LOGGER_DEAULT_LEVEL,
 			std::string file = "",
 			bool dual = false)
 	{
-		get_log4cxx(log4cxx::Level::toLevel(level), file, dual);
+		get_log4cxx(log4cxx_level(level), file, dual);
 		static Logger _logger(level);
 		return _logger;
 	}
@@ -92,21 +104,19 @@ public:
 	//! Returns threshold level of the Logger instance
 	size_t getLevel()
 	{
-		assert(get_log4cxx().getLevel() && "init of log4cxx::logger is broken");
-		return get_log4cxx().getLevel()->toInt();
+		return _level;
 	}
 
 	//! Returns whether given log level will produce output
 	bool willBeLogged(size_t level)
 	{
-		return level >= getLevel();
+		return level <= getLevel();
 	}
 
 	//! Returns threshold level of the Logger instance
 	std::string getLevelStr()
 	{
-		assert(get_log4cxx().getLevel() && "init of log4cxx::logger is broken");
-		return get_log4cxx().getLevel()->toString();
+		return log4cxx_level(getLevel())->toString();
 	}
 
 	//! Returns filename of the output file
@@ -121,7 +131,7 @@ public:
 	{
 		if (willBeLogged(level))
 		{
-			_buffer.reset(new Message(log4cxx::Level::toLevel(level)));
+			_buffer.reset(new Message(log4cxx_level(level)));
 			return _buffer->get();
 		}
 
