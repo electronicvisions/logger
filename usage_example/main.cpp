@@ -22,8 +22,8 @@ int main()
     log(Logger::ERROR) << "Something went terribly wrong.";
 
 	// multi-line messages are also possible
-	log(Logger::INFO) << "First line of multi-line message." << std::endl << "    Second line of multi-line message.\n";
-	log << "    Third line of multi-line message.";
+	log(Logger::INFO) << "First line of multi-line message." << std::endl << "    Second line of multi-line message.\n"
+	"    Third line of multi-line message.";
 
 	// use flush if you want the logger to print to the file immediately
     log(Logger::ERROR) << "This message is written immediately" << Logger::flush;
@@ -34,15 +34,15 @@ int main()
 	// you need to get a new message instance by using the ()-operator
     log(Logger::INFO) << "New log stream instance. This message works again";
 
-	{
-		// new RAII-style feature: temporary log level escalation
-		//    the local log level is reset within the object's current scope
-		Logger::AlterLevel level_escalation(Logger::DEBUG0);
-		log(Logger::DEBUG0) << "This message will be recorded, even though (DEBUG0) is globaly too low.";
+	//{
+		//// new RAII-style feature: temporary log level escalation
+		////    the local log level is reset within the object's current scope
+		//Logger::AlterLevel level_escalation(Logger::DEBUG0);
+		//log(Logger::DEBUG0) << "This message will be recorded, even though (DEBUG0) is globaly too low.";
 
-		Logger::AlterLevel level_reduction(Logger::ERROR);
-		log(Logger::WARNING) << "This message won't be recorded, even though (WARNING) is globaly high enough.";
-	}
+		//Logger::AlterLevel level_reduction(Logger::ERROR);
+		//log(Logger::WARNING) << "This message won't be recorded, even though (WARNING) is globaly high enough.";
+	//}
 
 	A a; a.test();
 
@@ -57,7 +57,7 @@ int main()
 	log << "w" << LogStream::purple;
 #endif // LOG_COLOR_OUTPUT
 
-	another();
+	//another();
 }
 
 
@@ -70,10 +70,10 @@ void other()
     log(Logger::INFO) << "This message comes from a different scope but goes into the same Logger instance.";
 }
 
-void another() {
-	// logging with a prefix...
-	PrefixedLogger& log = PrefixedLogger::instance("myprefix", Logger::INFO);
+//void another() {
+	//// logging with a prefix...
+	//PrefixedLogger& log = PrefixedLogger::instance("myprefix", Logger::INFO);
 
-	log(Logger::INFO) << "This is a prefixed test";
-	log(Logger::INFO) << "This is another prefixed test";
-}
+	//log(Logger::INFO) << "This is a prefixed test";
+	//log(Logger::INFO) << "This is another prefixed test";
+//}

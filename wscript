@@ -1,52 +1,52 @@
 #!/usr/bin/env python
 import sys, os
 from waflib import Options
-sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
+symap2ic = os.environ.get('SYMAP2IC_PATH')
+sys.path.insert(0, os.path.join(symap2ic, 'src/waf'))
 from symwaf2ic import *
+
+components = []
+recurse    = lambda ctx : map(lambda proj: ctx.recurse(proj), components)
 
 APPNAME='logger'
 
-def options(ctx):
-    ctx.load('compiler_c')
-    ctx.load('compiler_cxx')
-    ctx.load('boost')
+def options(opt):
+    #ctx.add_option('--log-color', action='store', default=False,
+            #help='use color for log output (default: False)')
 
-    ctx.add_option('--log-color', action='store', default=False,
-            help='use color for log output (default: False)')
+    recurse(opt)
+    opt.load('g++')
+    opt.load('boost')
 
+def configure(cfg):
+    #if Options.options.log_color:
+        #ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
 
-def configure(ctx):
-    ctx.load('compiler_c')
-    ctx.load('compiler_cxx')
-    ctx.load('boost')
+    recurse(cfg)
 
-    ctx.fix_boost_paths()
-    ctx.check_boost(lib='serialization system thread program_options',
-            uselib_store='BOOST4LOGGER')
+    cfg.load('g++')
+    cfg.load('boost')
 
-    ctx.env.INCLUDES_LOGGER    = ['.',]
-
-    if Options.options.log_color:
-        ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
-
+    cfg.check_boost('system thread', uselib_store='BOOST4LOGGER')
+    cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=1)
 
 def build(bld):
-    OBJCXXFLAGS = [ '-fPIC', '-O0', '-g' ]
+    recurse(bld)
 
-    bld.objects (
+    bld (
         target          = 'logger_obj',
-        source          = 'logger.cpp',
-        export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['BOOST4LOGGER', 'LOGGER'],
-        cxxflags        = OBJCXXFLAGS,
+        export_includes = '.',
+        use             = [
+            'BOOST4LOGGER',
+            'LOG4CXX',
+        ],
     )
 
-    bld.objects (
-        target          = 'logger_c_obj',
-        source          = 'logger_c.cpp',
-        export_includes = bld.env.INCLUDES_LOGGER,
-        use             = ['logger_obj', ],
-        cxxflags        = OBJCXXFLAGS,
+    bld(
+        features        = 'cxx cxxprogram',
+        source          = 'usage_example/main.cpp',
+        target          = 'logger_example',
+        use             = [ 'logger_obj' ],
+        install_path    = 'bin',
+        cxxflags        = [],
     )
-
-    bld.recurse('usage_example')
