@@ -48,7 +48,6 @@
 #define DEFAULT_LOG_LEVEL        Logger::DEBUG0
 
 // forward declarations
-class LogStream;
 class Logger;
 
 using std::size_t;
@@ -60,7 +59,7 @@ using std::size_t;
 class LogStream
 {
 protected:
-	std::ostringstream local_stream;
+	std::ostringstream * local_stream;
 	typedef std::ostream& (*stream_manip)(std::ostream&);
 	typedef LogStream& (*log_stream_manip)(LogStream&);
 private:
@@ -177,12 +176,10 @@ private:
 	size_t const static_loglevel;
 
 #ifndef PYPLUSPLUS
-	boost::thread_specific_ptr<LogStream> local_stream;
+	boost::thread_specific_ptr<LogStream> local_logstream;
 	static boost::mutex& getInit_mutex();
 	boost::thread_specific_ptr<size_t> loglevel;
 #endif // PYPLUSPLUS
-
-	static boost::scoped_ptr<Logger>& _getInstance();
 
 	static std::ofstream& getLogfile();
 
@@ -222,37 +219,34 @@ private:
 template <typename T>
 LogStream& LogStream::operator<<(const T& val)
 {
-	if (local_stream.bad()) return Logger::getDeafstream();
-	local_stream << val;
+	if (local_stream->bad())
+		return Logger::getDeafstream();
+	(*local_stream) << val;
 	return *this;
 }
 
 #ifndef PYPLUSPLUS // due to ifdefing of the declaration
 inline boost::mutex& Logger::getInit_mutex() {
-	static boost::mutex init_mutex;
-	return init_mutex;
+	static boost::mutex* init_mutex = NULL;
+	if (!init_mutex) init_mutex = new boost::mutex;
+	return *init_mutex;
 }
 #endif
 
-inline boost::scoped_ptr<Logger>& Logger::_getInstance()
-{
-	// this line is necessaray, otherwise file will be destructed before logger
-	// and last line will never hit the file;
-	Logger::getLogfile();
-
-	// The smart pointer is allocated - not the object itself.
-	static boost::scoped_ptr<Logger> _instance;
-	return _instance;
-}
-
 inline std::ofstream& Logger::getLogfile() {
-	static std::ofstream logfile;
-	return logfile;
+	static std::ofstream * _logfile = NULL;
+	if (!_logfile)
+		_logfile = new std::ofstream;
+	return *_logfile;
 }
 
 inline bool& Logger::getLogdual() {
-	static bool logdual = false;
-	return logdual;
+	static bool * _logdual = NULL;
+	if (!_logdual) {
+		_logdual = new bool;
+		*_logdual = false;
+	}
+	return *_logdual;
 }
 
 inline char const * const * Logger::getBuffer() {
@@ -266,8 +260,10 @@ inline char const * const * Logger::getBuffer() {
 
 inline LogStream& Logger::getDeafstream()
 {
-	static LogStream deafstream;
-	return deafstream;
+	static LogStream* _deafstream = NULL;
+	if (!_deafstream)
+		_deafstream = new LogStream;
+	return *_deafstream;
 }
 
 inline std::ostream& LogStream::getOutStream()
@@ -278,19 +274,19 @@ inline std::ostream& LogStream::getOutStream()
 
 inline void LogStream::writeOut()
 {
-	if (!local_stream.bad())
+	if (!local_stream->bad())
 	{
-		local_stream << std::endl;
-		getOutStream() << local_stream.str();
+		*local_stream << std::endl;
+		getOutStream() << local_stream->str();
 		if (Logger::getLogdual())
-			std::cout << local_stream.str();
+			std::cout << local_stream->str();
 	}
 }
 
 inline LogStream& LogStream::flush(LogStream& stream)
 {
 	stream.writeOut();
-	stream.local_stream.setstate(std::ios_base::badbit);
+	stream.local_stream->setstate(std::ios_base::badbit);
 	return stream;
 }
 
@@ -306,19 +302,20 @@ inline LogStream& Logger::formatStream(size_t level)
 	*local_stream << std::left << buffer[level];
 	*local_stream << resetColor() << ": ";
 #else // LOG_COLOR_OUTPUT
-	*local_stream  << microsec_clock::local_time() << " ";
-	local_stream->width(10);
-	*local_stream << std::left << getBuffer()[level] << ": ";
+	*local_logstream  << microsec_clock::local_time() << " ";
+	local_logstream->width(10);
+	*local_logstream << std::left << getBuffer()[level] << ": ";
 #endif // LOG_COLOR_OUTPUT
 
-	return *local_stream;
+	return *local_logstream;
 #endif // PYPLUSPLUS
 }
 
 inline void Logger::resetStream(LogStream* stream)
 {
 #ifndef PYPLUSPLUS
-	local_stream.reset(stream);
+	if (stream)
+		local_logstream.reset(stream);
 #endif
 }
 
@@ -342,8 +339,8 @@ template <typename T>
 LogStream& Logger::operator<<(const T& val)
 {
 #ifndef PYPLUSPLUS
-	if (local_stream.get())
-		return *local_stream << val;
+	if (local_logstream.get())
+		return *local_logstream << val;
 #endif // !PYPLUSPLUS
 	return getDeafstream();
 }
@@ -353,8 +350,8 @@ template <typename T>
 LogStream& Logger::operator<<(T& (*__fp)(T&))
 {
 #ifndef PYPLUSPLUS
-	if(local_stream.get())
-		return *local_stream << __fp;
+	if(local_logstream.get())
+		return *local_logstream << __fp;
 #endif // !PYPLUSPLUS
 	return getDeafstream();
 }

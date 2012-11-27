@@ -6,7 +6,9 @@
 // Class LogStream
 // -------------------------
 
-LogStream::LogStream() : local_stream() {}
+LogStream::LogStream() :
+	local_stream(new std::ostringstream)
+{}
 
 LogStream::~LogStream()
 {
@@ -15,13 +17,13 @@ LogStream::~LogStream()
 
 LogStream& LogStream::operator<<(LogStream& val)
 {
-	local_stream << val.str();
+	(*local_stream) << val.str();
 	return *this;
 }
 
 LogStream& LogStream::operator<<(stream_manip manip)
 {
-	manip(local_stream);
+	manip(*local_stream);
 	return *this;
 }
 LogStream& LogStream::operator<<(log_stream_manip manip)
@@ -73,18 +75,18 @@ LogStream& LogStream::reset(LogStream& stream)
 
 std::streamsize LogStream::width (std::streamsize wide)
 {
-	local_stream.width(wide);
+	local_stream->width(wide);
 	return wide;
 }
 
 void LogStream::setstate(std::ios_base::iostate state)
 {
-	local_stream.setstate(state);
+	local_stream->setstate(state);
 }
 
 std::string LogStream::str()
 {
-	return local_stream.str();
+	return local_stream->str();
 }
 
 
@@ -93,10 +95,11 @@ std::string LogStream::str()
 // -------------------------
 Logger::Logger(size_t level, std::string filename, bool dual) :
 	static_loglevel(level),
-	local_stream(),
+	local_logstream(),
 	loglevel(),
 	logfilename(filename)
 {
+	local_logstream.reset(new LogStream);
 	getLogdual() = dual;
 	getDeafstream().setstate(std::ios_base::eofbit);
 	resetStream(new LogStream);
@@ -108,10 +111,10 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 	if (logfilename.empty() && dual)
 		throw std::runtime_error("dual logging requires file name");
 
-	*local_stream << "*** Started logging @";
-	*local_stream << boost::posix_time::second_clock::local_time();
-	*local_stream << " with log level: " << getBuffer()[level];
-	*local_stream << " ***" << Logger::flush;
+	(*local_logstream) << "*** Started logging @";
+	(*local_logstream) << boost::posix_time::second_clock::local_time();
+	(*local_logstream) << " with log level: " << getBuffer()[level];
+	(*local_logstream) << " ***" << Logger::flush;
 }
 
 // hidden copy constructor
@@ -138,12 +141,12 @@ Logger& Logger::instance(
 {
 	boost::mutex::scoped_lock lock(getInit_mutex());
 
-	if(!_getInstance())
-	{
+	static Logger * _instance = NULL;
+	if (!_instance) {
 		if ( level > DEBUG3 ) level = DEBUG3;
-		_getInstance().reset(new Logger(level, filename, dual));
+		_instance = new Logger(level, filename, dual);
 	}
-	return *_getInstance();
+	return *_instance;
 }
 
 std::string Logger::getLevelStr()
