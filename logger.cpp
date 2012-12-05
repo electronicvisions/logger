@@ -110,7 +110,7 @@ Logger::Logger(size_t level, std::string filename, bool dual) :
 
 	*local_stream << "*** Started logging @";
 	*local_stream << boost::posix_time::second_clock::local_time();
-	*local_stream << "with log level: " << getBuffer()[level];
+	*local_stream << " with log level: " << getBuffer()[level];
 	*local_stream << " ***" << Logger::flush;
 }
 
