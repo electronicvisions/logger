@@ -314,8 +314,7 @@ inline LogStream& Logger::formatStream(size_t level)
 inline void Logger::resetStream(LogStream* stream)
 {
 #ifndef PYPLUSPLUS
-	if (stream)
-		local_logstream.reset(stream);
+	local_logstream.reset(stream);
 #endif
 }
 
