@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 import sys, os
 from waflib import Options
-sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
-from symwaf2ic import *
+
+try:
+    from waflib.extras import symwaf2ic
+    old_waf = False
+except ImportError:
+    sys.path.insert(0, os.path.join(os.environ['SYMAP2IC_PATH'], 'src/waf'))
+    from symwaf2ic import *
+    old_waf = True
 
 APPNAME='logger'
 
@@ -20,7 +26,8 @@ def configure(ctx):
     ctx.load('compiler_cxx')
     ctx.load('boost')
 
-    ctx.fix_boost_paths()
+    if old_waf:
+        ctx.fix_boost_paths()
     ctx.check_boost(lib='serialization system thread program_options',
             uselib_store='BOOST4LOGGER')
 
