@@ -295,12 +295,12 @@ inline LogStream& Logger::formatStream(size_t level)
 	using boost::posix_time::microsec_clock;
 #ifndef PYPLUSPLUS
 #ifdef LOG_COLOR_OUTPUT
-	*local_stream << COLOR_RESET;
-	*local_stream << microsec_clock::local_time() << " ";
-	*local_stream << toColor(level);
-	local_stream->width(10);
-	*local_stream << std::left << buffer[level];
-	*local_stream << resetColor() << ": ";
+	*local_logstream << COLOR_RESET;
+	*local_logstream << microsec_clock::local_time() << " ";
+	*local_logstream << toColor(level);
+	local_logstream->width(10);
+	*local_logstream << std::left << getBuffer()[level];
+	*local_logstream << resetColor() << ": ";
 #else // LOG_COLOR_OUTPUT
 	*local_logstream  << microsec_clock::local_time() << " ";
 	local_logstream->width(10);

@@ -17,8 +17,9 @@ def options(ctx):
     ctx.load('compiler_cxx')
     ctx.load('boost')
 
-    ctx.add_option('--log-color', action='store', default=False,
-            help='use color for log output (default: False)')
+    ctx.add_option('--no-logcolor', action='store', default=False,
+            help='use no color for log output (default: False)',
+            dest='no_logcolor')
 
 
 def configure(ctx):
@@ -33,7 +34,7 @@ def configure(ctx):
 
     ctx.env.INCLUDES_LOGGER    = ['.',]
 
-    if Options.options.log_color:
+    if not Options.options.no_logcolor:
         ctx.env.CXXFLAGS_LOGGER += ['-DLOG_COLOR_OUTPUT',]
 
 
