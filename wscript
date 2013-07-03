@@ -41,6 +41,12 @@ def configure(ctx):
 def build(bld):
     OBJCXXFLAGS = [ '-fPIC', '-O0', '-g' ]
 
+    bld(
+        target          = 'logger_inc',
+        export_includes = bld.env.INCLUDES_LOGGER,
+        use             = ['BOOST4LOGGER', 'LOGGER'],
+    )
+
     bld.objects (
         target          = 'logger_obj',
         source          = 'logger.cpp',
