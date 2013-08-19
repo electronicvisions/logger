@@ -12,6 +12,8 @@
 #include <log4cxx/fileappender.h>
 #include <log4cxx/simplelayout.h>
 
+#include "log4cxx/colorlayout.h"
+
 
 #define LOGGER_DEAULT_LEVEL Logger::WARNING
 
@@ -179,7 +181,7 @@ get_log4cxx(log4cxx::LevelPtr level,
 		if (fname.empty() || dual)
 		{
 			log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(
-				log4cxx::LayoutPtr(new log4cxx::SimpleLayout()));
+				log4cxx::LayoutPtr(new log4cxx::ColorLayout()));
 			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
 		}
 
