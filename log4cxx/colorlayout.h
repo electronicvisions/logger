@@ -9,6 +9,10 @@ namespace log4cxx {
 
 struct ColorLayout : public Layout
 {
+	ColorLayout(bool use_color=true) :
+		mColorless(!use_color)
+	{}
+
 	virtual void format(LogString& output,
 						spi::LoggingEventPtr const& event,
 						log4cxx::helpers::Pool& pool) const;
@@ -25,6 +29,8 @@ private:
 		"\33[30m", "\33[31m", "\33[32m",
 		"\33[33m", "\33[34m", "\33[35m",
 		"\33[36m", "\33[37m", "\33[0m" };
+
+	bool mColorless;
 };
 
 
@@ -37,7 +43,9 @@ void ColorLayout::format(LogString& _output,
 
 	ostringstream output;
 	int const level = event->getLevel()->toInt();
-	if (level >= Level::ERROR_INT) {
+	if (mColorless) {
+		// no color
+	} else if (level >= Level::ERROR_INT) {
 		output << color[Red];
 	} else if (level >= Level::WARN_INT) {
 		output << color[Yellow];
@@ -47,7 +55,7 @@ void ColorLayout::format(LogString& _output,
 
 	output
 		<< setw(6) << left << event->getLevel()->toString()
-		<< color[Reset]
+		<< (mColorless ? "" : color[Reset])
 		<< event->getLoggerName() << " "
 		<< event->getRenderedMessage()
 		<< endl;

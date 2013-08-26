@@ -10,7 +10,6 @@
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/fileappender.h>
-#include <log4cxx/simplelayout.h>
 
 #include "log4cxx/colorlayout.h"
 
@@ -188,7 +187,7 @@ get_log4cxx(log4cxx::LevelPtr level,
 		if (!fname.empty())
 		{
 			log4cxx::FileAppender* file = new log4cxx::FileAppender(
-				log4cxx::LayoutPtr(new log4cxx::SimpleLayout()), "logfile", false);
+				log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), "logfile", false);
 			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
 		}
 
