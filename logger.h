@@ -187,7 +187,7 @@ get_log4cxx(log4cxx::LevelPtr level,
 		if (!fname.empty())
 		{
 			log4cxx::FileAppender* file = new log4cxx::FileAppender(
-				log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), "logfile", false);
+				log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), fname, false);
 			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
 		}
 
