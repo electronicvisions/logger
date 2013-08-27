@@ -25,7 +25,7 @@ def build(bld):
     for program in bld.path.ant_glob('usage_example/*.cpp'):
         bld.program(
                 target = '%s' % os.path.splitext(program.relpath())[0],
-                source = program.relpath(),
+                source = [program],
                 use = ['logger_obj'],
                 install_path = 'bin')
 
