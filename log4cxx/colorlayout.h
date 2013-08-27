@@ -23,13 +23,6 @@ struct ColorLayout : public Layout
 						   const LogString& /* value */) {}
 
 private:
-	enum { Black, Red, Green, Yellow, Blue, Purple, Marine, Gray, Reset };
-
-	const char * const color[9] = {
-		"\33[30m", "\33[31m", "\33[32m",
-		"\33[33m", "\33[34m", "\33[35m",
-		"\33[36m", "\33[37m", "\33[0m" };
-
 	bool mColorless;
 };
 
@@ -40,6 +33,15 @@ void ColorLayout::format(LogString& _output,
 						 log4cxx::helpers::Pool&) const
 {
 	using namespace std;
+
+	enum { Black, Red, Green,
+		Yellow, Blue, Purple,
+		Marine, Gray, Reset };
+
+	static const char * const color[9] = {
+		"\33[30m", "\33[31m", "\33[32m",
+		"\33[33m", "\33[34m", "\33[35m",
+		"\33[36m", "\33[37m", "\33[0m" };
 
 	ostringstream output;
 	int const level = event->getLevel()->toInt();

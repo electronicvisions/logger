@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+import os
 
 def options(opt):
-    opt.load('g++')
+    opt.load('compiler_cxx')
     opt.load('boost')
 
 def configure(cfg):
-    cfg.load('g++')
+    cfg.load('compiler_cxx')
     cfg.load('boost')
 
     cfg.check_boost('system thread', uselib_store='BOOST4LOGGER')
@@ -21,11 +22,10 @@ def build(bld):
         ],
     )
 
-    bld(
-        features        = 'cxx cxxprogram',
-        source          = 'usage_example/main.cpp',
-        target          = 'logger_example',
-        use             = [ 'logger_obj' ],
-        install_path    = 'bin',
-        cxxflags        = [],
-    )
+    for program in bld.path.ant_glob('usage_example/*.cpp'):
+        bld.program(
+                target = '%s' % os.path.splitext(program.relpath())[0],
+                source = program.relpath(),
+                use = ['logger_obj'],
+                install_path = 'bin')
+
