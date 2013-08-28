@@ -62,11 +62,13 @@ private:
 	boost::thread_specific_ptr<Message> _buffer;
 	NullStream _null;
 	size_t _level;
+	size_t _last_level;
 
 	Logger(size_t level = LOGGER_DEAULT_LEVEL) :
 		_buffer(),
 		_null(),
-		_level(level)
+		_level(level),
+		_last_level(level)
 	{}
 
 	static
@@ -128,8 +130,10 @@ public:
 
 	//! Get stream instance
 	typename std::ostream&
-	operator() (size_t level = DEBUG0)
+	operator() (size_t level)
 	{
+		_last_level = level;
+
 		if (willBeLogged(level))
 		{
 			_buffer.reset(new Message(log4cxx_level(level)));
@@ -148,7 +152,10 @@ public:
 	typename std::ostream&
 	operator<<(T const& val)
 	{
-		return this->operator() () << val;
+		if (willBeLogged(_last_level))
+			return _buffer->get() << val;
+		else
+			return _null << val;
 	}
 };
 

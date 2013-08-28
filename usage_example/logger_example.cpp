@@ -57,6 +57,11 @@ int main()
 	log << "w" << LogStream::purple;
 #endif // LOG_COLOR_OUTPUT
 
+	// Testing whether "<<" operator works, It should consider the last used loglevel
+    log(Logger::INFO) << "New log stream instance. This message works again";
+	log << "this will be logged";
+    log(Logger::DEBUG0) << "New log stream instance. This message does not work, as loglevel is to high";
+	log << "and neither should this be logged";
 	//another();
 }
 
