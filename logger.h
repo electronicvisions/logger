@@ -129,7 +129,7 @@ public:
 	}
 
 	//! Get stream instance
-	typename std::ostream&
+	std::ostream&
 	operator() (size_t level)
 	{
 		_last_level = level;
@@ -149,7 +149,7 @@ public:
 	}
 
 	template <typename T>
-	typename std::ostream&
+	std::ostream&
 	operator<<(T const& val)
 	{
 		if (willBeLogged(_last_level))
