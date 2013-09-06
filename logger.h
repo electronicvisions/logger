@@ -14,7 +14,7 @@
 #include "log4cxx/colorlayout.h"
 
 
-#define LOGGER_DEAULT_LEVEL Logger::WARNING
+#define LOGGER_DEFAULT_LEVEL Logger::WARNING
 
 /// gets the "Default" instance from log4cxx
 log4cxx::Logger&
@@ -64,7 +64,7 @@ private:
 	size_t _level;
 	size_t _last_level;
 
-	Logger(size_t level = LOGGER_DEAULT_LEVEL) :
+	Logger(size_t level = LOGGER_DEFAULT_LEVEL) :
 		_buffer(),
 		_null(),
 		_level(level),
@@ -95,7 +95,7 @@ public:
 	enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
 
 	static Logger& instance(
-			size_t level = LOGGER_DEAULT_LEVEL,
+			size_t level = LOGGER_DEFAULT_LEVEL,
 			std::string file = "",
 			bool dual = false)
 	{
