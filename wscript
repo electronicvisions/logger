@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from waflib import Errors, Logs
 import os
 
 def options(opt):
@@ -10,13 +11,21 @@ def configure(cfg):
     cfg.load('boost')
 
     cfg.check_boost('system thread', uselib_store='BOOST4LOGGER')
-    cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
+    try:
+        cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
+        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('log4cxx').abspath()
+    except Errors.ConfigurationError:
+        Logs.pprint('PINK', "Using old-style logger (deprecated!)")
+        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('deprecated').abspath()
+
 
 def build(bld):
-    bld (
+    bld.objects(
         target          = 'logger_obj',
-        export_includes = '.',
+        source          = [bld.root.find_node(os.path.join(bld.env.INCLUDES_LOGGER, 'logger.cpp'))],
+        export_includes = bld.env.INCLUDES_LOGGER,
         use             = [
+            'LOGGER',
             'BOOST4LOGGER',
             'LOG4CXX',
         ],

@@ -11,7 +11,7 @@
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/fileappender.h>
 
-#include "log4cxx/colorlayout.h"
+#include "colorlayout.h"
 
 
 #define LOGGER_DEFAULT_LEVEL Logger::WARNING
