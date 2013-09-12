@@ -5,18 +5,22 @@ import os
 def options(opt):
     opt.load('compiler_cxx')
     opt.load('boost')
+    hopts = opt.add_option_group('Logger Options')
+    hopts.add_option('--enable-deprecated', action='store_true', default=False,
+                   help='Enable old logger (non-log4cxx version)')
+
 
 def configure(cfg):
     cfg.load('compiler_cxx')
     cfg.load('boost')
 
     cfg.check_boost('system thread', uselib_store='BOOST4LOGGER')
-    try:
-        cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
-        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('log4cxx').abspath()
-    except Errors.ConfigurationError:
+    if cfg.options.enable_deprecated:
         Logs.pprint('PINK', "Using old-style logger (deprecated!)")
         cfg.env.INCLUDES_LOGGER = cfg.path.find_node('deprecated').abspath()
+    else:
+        cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
+        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('log4cxx').abspath()
 
 
 def build(bld):
