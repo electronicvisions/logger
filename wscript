@@ -8,6 +8,8 @@ def options(opt):
     hopts = opt.add_option_group('Logger Options')
     hopts.add_option('--enable-deprecated', action='store_true', default=False,
                    help='Enable old logger (non-log4cxx version)')
+    hopts.add_option('--disable-colorlog', action='store_true', default=False,
+                   help='Disable color output for logger')
 
 
 def configure(cfg):
@@ -22,6 +24,8 @@ def configure(cfg):
         cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
         cfg.env.INCLUDES_LOGGER = cfg.path.find_node('log4cxx').abspath()
 
+    if cfg.options.disable_colorlog:
+        cfg.env.DEFINES_LOGGER = [ 'CONFIG_NO_COLOR' ]
 
 def build(bld):
     bld.objects(

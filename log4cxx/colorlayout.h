@@ -34,6 +34,9 @@ void ColorLayout::format(LogString& _output,
 {
 	using namespace std;
 
+	ostringstream output;
+
+#ifndef CONFIG_NO_COLOR
 	enum { Black, Red, Green,
 		Yellow, Blue, Purple,
 		Marine, Gray, Reset };
@@ -43,7 +46,6 @@ void ColorLayout::format(LogString& _output,
 		"\33[33m", "\33[34m", "\33[35m",
 		"\33[36m", "\33[37m", "\33[0m" };
 
-	ostringstream output;
 	int const level = event->getLevel()->toInt();
 	if (mColorless) {
 		// no color
@@ -54,10 +56,13 @@ void ColorLayout::format(LogString& _output,
 	} else {
 		output << color[Green];
 	}
+#endif  /* CONFIG_NO_COLOR */
 
 	output
 		<< setw(6) << left << event->getLevel()->toString()
+#ifndef CONFIG_NO_COLOR
 		<< (mColorless ? "" : color[Reset])
+#endif  /* CONFIG_NO_COLOR */
 		<< event->getLoggerName() << " "
 		<< event->getRenderedMessage()
 		<< endl;
