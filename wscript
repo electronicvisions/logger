@@ -16,7 +16,7 @@ def configure(cfg):
     cfg.load('compiler_cxx')
     cfg.load('boost')
 
-    cfg.check_boost('system thread', uselib_store='BOOST4LOGGER')
+    cfg.check_boost('system thread filesystem', uselib_store='BOOST4LOGGER')
     if cfg.options.enable_deprecated:
         Logs.pprint('PINK', "Using old-style logger (deprecated!)")
         cfg.env.INCLUDES_LOGGER = cfg.path.find_node('deprecated').abspath()

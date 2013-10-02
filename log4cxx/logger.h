@@ -5,9 +5,11 @@
 #include <stdexcept>
 
 #include <boost/thread/tss.hpp>
+#include <boost/filesystem.hpp>
 
 #include <log4cxx/logger.h>
 #include <log4cxx/basicconfigurator.h>
+#include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/fileappender.h>
 
@@ -178,30 +180,44 @@ log4cxx::Logger&
 get_log4cxx(log4cxx::LevelPtr level,
 	std::string fname, bool dual)
 {
+	using namespace boost::filesystem;
+
 	static log4cxx::Logger* _logger;
 	if (!_logger)
 	{
 		if (fname.empty() && dual)
 			throw std::logic_error("dual log mode requires a filename");
 
-		if (fname.empty() || dual)
-		{
-			log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(
-				log4cxx::LayoutPtr(new log4cxx::ColorLayout()));
-			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
-		}
+		path logger_config("symap2ic_logger.conf");
 
-		if (!fname.empty())
-		{
-			log4cxx::FileAppender* file = new log4cxx::FileAppender(
-				log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), fname, false);
-			log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
-		}
+		bool use_file = exists(logger_config);
 
-		// never ever touch the allmighty &* ;)
-		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
+		if (use_file)
+		{
+			log4cxx::PropertyConfigurator::configure(system_complete(logger_config).c_str());
+		}
+		else
+		{
+			if (fname.empty() || dual)
+			{
+				log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(
+					log4cxx::LayoutPtr(new log4cxx::ColorLayout()));
+				log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
+			}
+
+			if (!fname.empty())
+			{
+				log4cxx::FileAppender* file = new log4cxx::FileAppender(
+					log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), fname, false);
+				log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
+			}
+
+			// never ever touch the allmighty &* ;)
+			//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
+		}
 		_logger = &*log4cxx::Logger::getLogger("Default");
-		_logger->setLevel(level);
+		if (!use_file)
+			_logger->setLevel(level);
 	}
 	return *_logger;
 }
