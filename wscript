@@ -28,15 +28,17 @@ def configure(cfg):
         cfg.env.DEFINES_LOGGER = [ 'CONFIG_NO_COLOR' ]
 
 def build(bld):
+    src_dir = bld.root.find_node(os.path.join(bld.env.INCLUDES_LOGGER))
     bld.objects(
         target          = 'logger_obj',
-        source          = [bld.root.find_node(os.path.join(bld.env.INCLUDES_LOGGER, 'logger.cpp'))],
+        source          = src_dir.ant_glob('*.cpp'),
         export_includes = bld.env.INCLUDES_LOGGER,
         use             = [
             'LOGGER',
             'BOOST4LOGGER',
             'LOG4CXX',
         ],
+        cxxflags = ['-Wall', '-Wextra', '-fPIC'],
     )
 
     for program in bld.path.ant_glob('usage_example/*.cpp'):
