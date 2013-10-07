@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from waflib.extras.gtest import summary
+
+def load(ctx):
+    ctx.load('compiler_cxx')
+    ctx.load('boost')
+    ctx.load('python')
+    ctx.load('pytest')
+    ctx.load('post_task')
+
+def depends(ctx):
+    ctx('symap2ic', 'src/logging')
+
+def options(opt):
+    load(opt)
+
+def configure(cfg):
+    load(cfg)
+    cfg.check_python_headers()
+    cfg.check_boost(lib='python', uselib_store='BOOST4PYLOGGING')
+
+def build(bld):
+    bld(
+            target = 'pylogging',
+            features = 'cxx cxxshlib pyembed pyext',
+            source = 'pylogging.cpp',
+            export_includes = '.',
+            use = ['BOOST4PYLOGGING', 'logger_obj'],
+            cxxflags = ['-Wall', '-Wextra', '-fPIC', '-std=c++11'],
+            linkflags = ['-Wl,-zdefs'],
+            install_path = 'lib',
+            post_task = 'pyloggingtest',
+    )
+
+    bld(
+        name            = "pyloggingtest",
+        tests           = ['test_pylogging.py'],
+        features        = 'pytest',
+        use             = 'pylogging',
+        install_path    = 'bin/tests',
+    )
+    bld.add_post_fun(summary)
