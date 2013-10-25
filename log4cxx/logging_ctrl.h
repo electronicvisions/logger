@@ -19,6 +19,16 @@
 /// Reset the logger config
 void logger_reset();
 
+/// This is the default configuration procedure for the logger
+/// If the file ""symap2ic_logger.conf" is found, it is used to configure the
+/// logger and every other argument is ignored!
+/// @level: Log level
+/// @arg fname: Log to this file, if empty to stdout
+/// @arg dual: If file is given, log also to stdout
+void logger_default_config(log4cxx::LevelPtr level = log4cxx::Level::getWarn(),
+		                   std::string fname = "",
+		                   bool dual = false);
+
 /// Load logger config from the given configuration file
 /// @see ???
 void logger_config_from_file(std::string filename);

@@ -14,17 +14,30 @@
 #include <log4cxx/fileappender.h>
 
 #include "colorlayout.h"
-
+#include "logging_ctrl.h"
 
 #define LOGGER_DEFAULT_LEVEL Logger::WARNING
 
 /// gets the "Default" instance from log4cxx
+inline
 log4cxx::Logger&
 get_log4cxx(
 	// don't change default argument. It's an empty "smart" pointer on purpose
 	log4cxx::LevelPtr level = log4cxx::LevelPtr(),
 	std::string fname = std::string(),
-	bool dual = false);
+	bool dual = false, bool init = true)
+{
+	static log4cxx::Logger* _logger;
+	if (!_logger)
+	{
+		// never ever touch the allmighty &* ;)
+		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
+		_logger = &*log4cxx::Logger::getLogger("Default");
+		if (init)
+			logger_default_config(level, fname, dual);
+	}
+	return *_logger;
+}
 
 struct Message
 {
@@ -161,7 +174,6 @@ public:
 	}
 };
 
-
 class LoggerMixin
 {
 public:
@@ -174,50 +186,3 @@ protected:
 	Logger& mLog;
 };
 
-
-inline
-log4cxx::Logger&
-get_log4cxx(log4cxx::LevelPtr level,
-	std::string fname, bool dual)
-{
-	using namespace boost::filesystem;
-
-	static log4cxx::Logger* _logger;
-	if (!_logger)
-	{
-		if (fname.empty() && dual)
-			throw std::logic_error("dual log mode requires a filename");
-
-		path logger_config("symap2ic_logger.conf");
-
-		bool use_file = exists(logger_config);
-
-		if (use_file)
-		{
-			log4cxx::PropertyConfigurator::configure(system_complete(logger_config).c_str());
-		}
-		else
-		{
-			if (fname.empty() || dual)
-			{
-				log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(
-					log4cxx::LayoutPtr(new log4cxx::ColorLayout()));
-				log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
-			}
-
-			if (!fname.empty())
-			{
-				log4cxx::FileAppender* file = new log4cxx::FileAppender(
-					log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), fname, false);
-				log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
-			}
-
-			// never ever touch the allmighty &* ;)
-			//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
-		}
-		_logger = &*log4cxx::Logger::getLogger("Default");
-		if (!use_file)
-			_logger->setLevel(level);
-	}
-	return *_logger;
-}

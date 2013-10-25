@@ -91,6 +91,7 @@ namespace {
 	object LOG_TRACE (tuple args, dict) { return log(TRACE, args); }
 
 	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
+	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
 }
 
 typedef return_value_policy<copy_const_reference> ccr;
@@ -120,9 +121,19 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("WARN",  raw_function(LOG_WARN , 1))
 		.def("ERROR", raw_function(LOG_ERROR, 1))
 		.def("FATAL", raw_function(LOG_FATAL, 1))
+		.def("trace", raw_function(LOG_TRACE, 1))
+		.def("debug", raw_function(LOG_DEBUG, 1))
+		.def("info",  raw_function(LOG_INFO , 1))
+		.def("warn",  raw_function(LOG_WARN , 1))
+		.def("error", raw_function(LOG_ERROR, 1))
+		.def("fatal", raw_function(LOG_FATAL, 1))
 	;
 
 	def("reset", logger_reset, "Reset the logger config");
+
+	def("default_config", logger_default_config, 
+			( arg("level") = log4cxx::Level::getWarn(), arg("fname")="", arg("dual")=false ),
+			"Load logger config from the given configuration file");
 
 	def("config_from_file", logger_config_from_file,
 			"Load logger config from the given configuration file");
@@ -137,6 +148,7 @@ BOOST_PYTHON_MODULE(pylogging)
 			"Set the loglevel");
 
 	def("get", get_logger, "Returns a logger for the given channel");
+	def("get_root", get_root_logger, "Returns a logger for the given channel");
 
     def("LOG4CXX_TRACE", raw_function(LOG_TRACE, 1));
     def("LOG4CXX_DEBUG", raw_function(LOG_DEBUG, 1));
