@@ -29,8 +29,9 @@ def configure(cfg):
 
 def build(bld):
     src_dir = bld.root.find_node(os.path.join(bld.env.INCLUDES_LOGGER))
-    bld.objects(
-        target          = 'logger_obj',
+    bld.shlib(
+        target          = 'logger',
+        name            = 'logger_obj',
         source          = src_dir.ant_glob('*.cpp'),
         export_includes = bld.env.INCLUDES_LOGGER,
         use             = [
@@ -38,7 +39,7 @@ def build(bld):
             'BOOST4LOGGER',
             'LOG4CXX',
         ],
-        cxxflags = ['-Wall', '-Wextra', '-fPIC'],
+        cxxflags = ['-Wall', '-Wextra'],
     )
 
     for program in bld.path.ant_glob('usage_example/*.cpp'):
