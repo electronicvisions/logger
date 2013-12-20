@@ -39,6 +39,7 @@ def build(bld):
             'BOOST4LOGGER',
             'LOG4CXX',
         ],
+        install_path = 'lib',
         cxxflags = ['-Wall', '-Wextra'],
     )
 
