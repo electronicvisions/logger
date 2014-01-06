@@ -39,7 +39,7 @@ def build(bld):
             'BOOST4LOGGER',
             'LOG4CXX',
         ],
-        install_path = 'lib',
+        install_path = '${PREFIX}/lib',
         cxxflags = ['-Wall', '-Wextra'],
     )
 
@@ -48,7 +48,7 @@ def build(bld):
                 target = '%s' % os.path.splitext(program.relpath())[0],
                 source = [program],
                 use = ['logger_obj'],
-                install_path = 'bin',
+                install_path = '${PREFIX}/bin',
                 cxxflags = ['-Wall', '-Wextra', '-fPIC'],
         )
 
