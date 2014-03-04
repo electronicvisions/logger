@@ -30,19 +30,34 @@ void logger_config_from_file(std::string filename)
 	log4cxx::PropertyConfigurator::configure(p.c_str());
 }
 
+log4cxx::AppenderPtr
+logger_append_to_file(std::string filename, log4cxx::LoggerPtr logger)
+{
+	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout(false));
+	log4cxx::AppenderPtr appender(new log4cxx::FileAppender(
+				layout, filename, false));
+	logger->addAppender(appender);
+	return appender;
+}
+
+
+log4cxx::AppenderPtr logger_append_to_cout(log4cxx::LoggerPtr logger)
+{
+	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout());
+	log4cxx::AppenderPtr appender(new log4cxx::ConsoleAppender(layout));
+	logger->addAppender(appender);
+	return appender;
+}
+
 void logger_log_to_file(std::string filename, log4cxx::LevelPtr level)
 {
-	log4cxx::FileAppender* file = new log4cxx::FileAppender(
-			log4cxx::LayoutPtr(new log4cxx::ColorLayout(false)), filename, false);
-	log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(file));
+	logger_append_to_file(filename, log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
 }
 
 void logger_log_to_cout(log4cxx::LevelPtr level)
 {
-	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout());
-	log4cxx::ConsoleAppender* console = new log4cxx::ConsoleAppender(layout);
-	log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(console));
+	logger_append_to_cout(log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
 }
 
@@ -50,7 +65,6 @@ void logger_default_config(log4cxx::LevelPtr level,
 		                   std::string fname, bool dual)
 {
 	using namespace boost::filesystem;
-	std::cerr << ">>>> logger_default_config: " << fname << " " << dual;
 
 	get_log4cxx(level, fname, dual, false);
 

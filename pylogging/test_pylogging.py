@@ -50,6 +50,7 @@ class Test_Pylogging(unittest.TestCase):
         logger2 = logger.get("xyz");
         logger3 = logger.get("xyz.test");
 
+        logger.set_loglevel(logger1, logger.LogLevel.WARN)
         logger.set_loglevel(logger2, logger.LogLevel.DEBUG)
         logger.set_loglevel(logger3, logger.LogLevel.INFO)
 
@@ -89,6 +90,75 @@ FATAL xyz.test FATAL
 ERROR xyz.test ERROR
 WARN  xyz.test WARN
 INFO  xyz.test INFO
+"""
+            self.assertEqual(expected, f.read())
+
+    def test_file_logging_with_filter(self):
+        logger1 = logger.get("test");
+        logger2 = logger.get("xyz");
+        logger3 = logger.get("xyz.test");
+
+        logger.set_loglevel(logger1, logger.LogLevel.WARN)
+        logger.set_loglevel(logger2, logger.LogLevel.DEBUG)
+        logger.set_loglevel(logger3, logger.LogLevel.INFO)
+
+        # Test different filter
+        log = os.path.join(self.temp, 'test_file_logging_with_filter.log')
+        app = logger.append_to_file(log, logger.get_root())
+        f = logger.LevelRangeFilter()
+        f.setLevelMin(logger.LogLevel.DEBUG)
+        f.setLevelMax(logger.LogLevel.WARN)
+        app.addFilter(f)
+
+        log2 = os.path.join(self.temp, 'test_file_logging_with_filter2.log')
+        app = logger.append_to_file(log2, logger.get_root())
+        f = logger.LevelRangeFilter()
+        f.setLevelMin(logger.LogLevel.ERROR)
+        f.setLevelMax(logger.LogLevel.FATAL)
+        app.addFilter(f)
+
+        log3 = os.path.join(self.temp, 'test_file_logging_with_filter3.log')
+        app = logger.append_to_file(log3, logger2)
+        f = logger.LevelRangeFilter()
+        f.setLevelMin(logger.LogLevel.ERROR)
+        f.setLevelMax(logger.LogLevel.FATAL)
+        app.addFilter(f)
+
+
+        for l in (logger1, logger2, logger3):
+            logger.LOG4CXX_FATAL(l, "FATAL")
+            logger.LOG4CXX_ERROR(l, "ERROR")
+            logger.LOG4CXX_WARN (l, "WARN")
+            logger.LOG4CXX_INFO (l, "INFO")
+            logger.LOG4CXX_DEBUG(l, "DEBUG")
+            logger.LOG4CXX_TRACE(l, "TRACE")
+
+        logger.reset()
+        with open(log) as f:
+            expected =  """WARN  test WARN
+WARN  xyz WARN
+INFO  xyz INFO
+DEBUG xyz DEBUG
+WARN  xyz.test WARN
+INFO  xyz.test INFO
+"""
+            self.assertEqual(expected, f.read())
+
+        with open(log2) as f:
+            expected = """FATAL test FATAL
+ERROR test ERROR
+FATAL xyz FATAL
+ERROR xyz ERROR
+FATAL xyz.test FATAL
+ERROR xyz.test ERROR
+"""
+            self.assertEqual(expected, f.read())
+
+        with open(log3) as f:
+            expected = """FATAL xyz FATAL
+ERROR xyz ERROR
+FATAL xyz.test FATAL
+ERROR xyz.test ERROR
 """
             self.assertEqual(expected, f.read())
 

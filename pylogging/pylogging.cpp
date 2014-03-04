@@ -9,6 +9,8 @@
 #include <log4cxx/logger.h>
 #include <log4cxx/layout.h>
 
+#include <log4cxx/filter/levelrangefilter.h>
+
 #include "logging_ctrl.h"
 
 using namespace boost::python;
@@ -129,6 +131,26 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("fatal", raw_function(LOG_FATAL, 1))
 	;
 
+	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable>("Appender", no_init)
+		.def("addFilter", &log4cxx::Appender::addFilter, "Add a filter to the end of the filter list.")
+	;
+
+	class_<log4cxx::spi::Filter, log4cxx::spi::FilterPtr, boost::noncopyable>("Filter", no_init)
+	;
+
+	class_<log4cxx::filter::LevelRangeFilter,
+	       log4cxx::filter::LevelRangeFilterPtr,
+		   boost::noncopyable, bases<log4cxx::spi::Filter> >(
+			"LevelRangeFilter", init<>())
+		.def("setLevelMax",	     &log4cxx::filter::LevelRangeFilter::setLevelMax)
+		.def("setLevelMin",      &log4cxx::filter::LevelRangeFilter::setLevelMin)
+		.def("setAcceptOnMatch", &log4cxx::filter::LevelRangeFilter::setAcceptOnMatch, ccr())
+		.def("getLevelMax",      &log4cxx::filter::LevelRangeFilter::getLevelMax, ccr())
+		.def("getLevelMin",      &log4cxx::filter::LevelRangeFilter::getLevelMin, ccr())
+		.def("getAcceptOnMatch", &log4cxx::filter::LevelRangeFilter::getAcceptOnMatch)
+	;
+	implicitly_convertible< log4cxx::filter::LevelRangeFilterPtr, log4cxx::spi::FilterPtr>();
+
 	def("reset", logger_reset, "Reset the logger config");
 
 	def("default_config", logger_default_config, 
@@ -137,6 +159,14 @@ BOOST_PYTHON_MODULE(pylogging)
 
 	def("config_from_file", logger_config_from_file,
 			"Load logger config from the given configuration file");
+
+	def("append_to_file", logger_append_to_file, 
+			( arg("filename"), arg("logger") = log4cxx::Logger::getRootLogger()),
+			"adds a FileAppender to the given logger");
+
+	def("append_to_cout", logger_append_to_cout,
+			( arg("logger") = log4cxx::Logger::getRootLogger()),
+			"adds a ConsoleAppender to the given logger");
 
 	def("log_to_file", logger_log_to_file,
 			"Configure the logger to log everything above the given loglevel to a file");
