@@ -11,6 +11,17 @@ class Test_Pylogging(unittest.TestCase):
         self.temp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp)
 
+    def test_reset(self):
+        logger.log_to_cout(logger.LogLevel.WARN)
+        logger1 = logger.get("test");
+        logger2 = logger.get("xyz");
+
+        logger.reset()
+
+        self.assertEqual(0, logger1._get_number_of_appenders())
+        self.assertEqual(0, logger2._get_number_of_appenders())
+        self.assertEqual(0, logger.get_root()._get_number_of_appenders())
+
     def test_cout_logging(self):
         logger.log_to_cout(logger.LogLevel.WARN)
 

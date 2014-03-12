@@ -99,6 +99,10 @@ namespace {
 			log4cxx::Logger & l = get_log4cxx(level, file, dual);
 			return log4cxx::LoggerPtr(&l);
 	}
+
+	size_t get_number_of_appenders(log4cxx::LoggerPtr logger) {
+		return logger->getAllAppenders().size();
+	}
 }
 
 typedef return_value_policy<copy_const_reference> ccr;
@@ -136,6 +140,7 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("error", raw_function(LOG_ERROR, 1))
 		.def("fatal", raw_function(LOG_FATAL, 1))
 		.def("setAdditivity", &log4cxx::Logger::setAdditivity, "Set the additivity flag for this Logger instance.")
+		.def("_get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
 
 	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable>("Appender", no_init)
