@@ -66,11 +66,6 @@ void logger_default_config(log4cxx::LevelPtr level,
 {
 	using namespace boost::filesystem;
 
-	get_log4cxx(level, fname, dual, false);
-
-	if (fname.empty() && dual)
-		throw std::logic_error("dual log mode requires a filename");
-
 	path logger_config("symap2ic_logger.conf");
 	if (exists(logger_config))
 	{
@@ -79,19 +74,17 @@ void logger_default_config(log4cxx::LevelPtr level,
 	}
 	else
 	{
-		if (fname.empty() || dual)
+		// Configure the default logger, which will not append to the root logger
+		Logger::instance(Logger::logger_level(level), fname, dual);
+		log4cxx::AppenderList appenders = get_log4cxx().getAllAppenders();
+		for (log4cxx::AppenderList::iterator it = appenders.begin();
+				it != appenders.end(); ++it)
 		{
-			std::cerr << ">>>> log to cout" << std::endl;
-			logger_log_to_cout(level);
-		}
-
-		if (!fname.empty())
-		{
-			std::cerr << ">>>> log to " << fname << std::endl;
-			logger_log_to_file(fname, level);
+			log4cxx::Logger::getRootLogger()->addAppender(*it);
 		}
 	}
 }
+
 
 
 void logger_set_loglevel(log4cxx::LoggerPtr	l, log4cxx::LevelPtr level)

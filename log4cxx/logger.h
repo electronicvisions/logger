@@ -18,6 +18,9 @@
 
 #define LOGGER_DEFAULT_LEVEL Logger::WARNING
 
+/// Get a log4cxx logger, while mimik the configuration behaviour of the old logger
+log4cxx::LoggerPtr get_default_logger(log4cxx::LevelPtr level, std::string fname, bool dual);
+
 /// gets the "Default" instance from log4cxx
 inline
 log4cxx::Logger&
@@ -25,16 +28,14 @@ get_log4cxx(
 	// don't change default argument. It's an empty "smart" pointer on purpose
 	log4cxx::LevelPtr level = log4cxx::LevelPtr(),
 	std::string fname = std::string(),
-	bool dual = false, bool init = true)
+	bool dual = false)
 {
 	static log4cxx::Logger* _logger;
 	if (!_logger)
 	{
 		// never ever touch the allmighty &* ;)
 		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
-		_logger = &*log4cxx::Logger::getLogger("Default");
-		if (init)
-			logger_default_config(level, fname, dual);
+		_logger = &*get_default_logger(level, fname, dual);
 	}
 	return *_logger;
 }
@@ -86,6 +87,7 @@ private:
 		_last_level(level)
 	{}
 
+public:
 	static
 	log4cxx::LevelPtr log4cxx_level(size_t level)
 	{
@@ -106,8 +108,24 @@ private:
 		}
 	}
 
-public:
 	enum levels {ERROR=0, WARNING=1, INFO=2, DEBUG0=3, DEBUG1=4, DEBUG2=5, DEBUG3=6};
+
+	static
+	levels logger_level(log4cxx::LevelPtr level)
+	{
+		if (level->isGreaterOrEqual(log4cxx::Level::getError()))
+			return ERROR;
+		if (level->isGreaterOrEqual(log4cxx::Level::getWarn()))
+			return WARNING;
+		if (level->isGreaterOrEqual(log4cxx::Level::getInfo()))
+			return INFO;
+		if (level->isGreaterOrEqual(log4cxx::Level::getDebug()))
+			return DEBUG0;
+		if (level->isGreaterOrEqual(log4cxx::Level::getTrace()))
+			return DEBUG1;
+		return DEBUG2;
+	}
+
 
 	static Logger& instance(
 			size_t level = LOGGER_DEFAULT_LEVEL,
