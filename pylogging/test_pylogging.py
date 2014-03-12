@@ -95,15 +95,15 @@ INFO  xyz.test INFO
 
     def test_default_logger(self):
         log_all  = os.path.join(self.temp, 'test_default_logger_all.log')
-        log_root = os.path.join(self.temp, 'test_default_logger_root.log')
+        log_default = os.path.join(self.temp, 'test_default_logger_default.log')
 
         logger1 = logger.get("test")
 
         logger.default_config(logger.LogLevel.DEBUG, log_all)
-        logger.append_to_file(log_root, logger.get_root())
 
-        # Loglevel should be ignored, because it is set
+        # Loglevel should be ignored, because the root logger is configured
         logger_default = logger.get_old_logger(logger.LogLevel.TRACE)
+        logger.append_to_file(log_default, logger_default)
 
         for l in (logger_default, logger1):
             logger.LOG4CXX_FATAL(l, "FATAL")
@@ -129,13 +129,13 @@ DEBUG test DEBUG
 """
             self.assertEqual(expected, f.read())
 
-        with open(log_root) as f:
+        with open(log_default) as f:
             expected = \
-"""FATAL test FATAL
-ERROR test ERROR
-WARN  test WARN
-INFO  test INFO
-DEBUG test DEBUG
+"""FATAL Default FATAL
+ERROR Default ERROR
+WARN  Default WARN
+INFO  Default INFO
+DEBUG Default DEBUG
 """
             self.assertEqual(expected, f.read())
 

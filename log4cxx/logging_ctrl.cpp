@@ -74,14 +74,8 @@ void logger_default_config(log4cxx::LevelPtr level,
 	}
 	else
 	{
-		// Configure the default logger, which will not append to the root logger
-		Logger::instance(Logger::logger_level(level), fname, dual);
-		log4cxx::AppenderList appenders = get_log4cxx().getAllAppenders();
-		for (log4cxx::AppenderList::iterator it = appenders.begin();
-				it != appenders.end(); ++it)
-		{
-			log4cxx::Logger::getRootLogger()->addAppender(*it);
-		}
+		configure_default_logger(log4cxx::Logger::getRootLogger(),
+				level, fname, dual);
 	}
 }
 
