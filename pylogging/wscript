@@ -33,7 +33,7 @@ def build(bld):
             use = ['BOOST4PYLOGGING', 'logger_obj'],
             cxxflags = ['-Wall', '-Wextra', '-fPIC', '-std=c++11'],
             linkflags = ['-Wl,-zdefs'],
-            install_path = 'lib',
+            install_path = '${PREFIX}/lib',
             post_task = 'pyloggingtest',
     )
 
@@ -42,6 +42,6 @@ def build(bld):
         tests           = ['test_pylogging.py'],
         features        = 'pytest',
         use             = 'pylogging',
-        install_path    = 'bin/tests',
+        install_path = '${PREFIX}/bin/tests',
     )
     bld.add_post_fun(summary)
