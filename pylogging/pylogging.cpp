@@ -8,11 +8,14 @@
 
 #include <log4cxx/logger.h>
 #include <log4cxx/layout.h>
+#include <log4cxx/consoleappender.h>
+#include <log4cxx/fileappender.h>
 
 #include <log4cxx/filter/levelrangefilter.h>
 
 #include "logging_ctrl.h"
 #include "logger.h"
+#include "colorlayout.h"
 
 using namespace boost::python;
 
@@ -139,13 +142,39 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("warn",  raw_function(LOG_WARN , 1))
 		.def("error", raw_function(LOG_ERROR, 1))
 		.def("fatal", raw_function(LOG_FATAL, 1))
+		.def("addAppender", &log4cxx::Logger::addAppender, "Add newAppender to the list of appenders of this Logger instance.\n"
+				                                           "If newAppender is already in the list of appenders, then it won't be added again.")
 		.def("setAdditivity", &log4cxx::Logger::setAdditivity, "Set the additivity flag for this Logger instance.")
 		.def("_get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
 
+	class_<log4cxx::Layout, log4cxx::LayoutPtr, boost::noncopyable>("Layout", no_init)
+	;
+
+	class_<log4cxx::ColorLayout, log4cxx::ColorLayoutPtr, boost::noncopyable>(
+			"ColorLayout", init<bool>())
+	;
+	implicitly_convertible< log4cxx::ColorLayoutPtr, log4cxx::LayoutPtr>();
+
 	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable>("Appender", no_init)
 		.def("addFilter", &log4cxx::Appender::addFilter, "Add a filter to the end of the filter list.")
 	;
+
+	class_<log4cxx::ConsoleAppender,
+		   log4cxx::ConsoleAppenderPtr,
+		   boost::noncopyable,
+		   bases<log4cxx::Appender> >(
+			"ConsoleAppender", init<log4cxx::LayoutPtr>())
+	;
+	implicitly_convertible< log4cxx::ConsoleAppenderPtr, log4cxx::AppenderPtr>();
+
+	class_<log4cxx::FileAppender,
+		   log4cxx::FileAppenderPtr,
+		   boost::noncopyable,
+		   bases<log4cxx::Appender> >(
+			"FileAppender", init<log4cxx::LayoutPtr, std::string, bool>())
+	;
+	implicitly_convertible< log4cxx::FileAppenderPtr, log4cxx::AppenderPtr>();
 
 	class_<log4cxx::spi::Filter, log4cxx::spi::FilterPtr, boost::noncopyable>("Filter", no_init)
 	;

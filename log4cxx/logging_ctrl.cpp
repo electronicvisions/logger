@@ -34,8 +34,9 @@ log4cxx::AppenderPtr
 logger_append_to_file(std::string filename, log4cxx::LoggerPtr logger)
 {
 	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout(false));
-	log4cxx::AppenderPtr appender(new log4cxx::FileAppender(
+	log4cxx::FileAppenderPtr appender(new log4cxx::FileAppender(
 				layout, filename, false));
+	appender->setImmediateFlush(true);
 	logger->addAppender(appender);
 	return appender;
 }

@@ -30,4 +30,6 @@ private:
 	bool mPrintLocation;
 };
 
+LOG4CXX_PTR_DEF(ColorLayout);
+
 } // namespace log4cxx
