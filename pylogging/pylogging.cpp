@@ -106,6 +106,7 @@ namespace {
 	size_t get_number_of_appenders(log4cxx::LoggerPtr logger) {
 		return logger->getAllAppenders().size();
 	}
+
 }
 
 typedef return_value_policy<copy_const_reference> ccr;
@@ -113,6 +114,17 @@ typedef return_value_policy<reference_existing_object> reo;
 
 BOOST_PYTHON_MODULE(pylogging)
 {
+	class_<log4cxx::helpers::Pool, boost::noncopyable>(
+			"Pool")
+	;
+
+
+	class_<log4cxx::spi::OptionHandler, log4cxx::spi::OptionHandlerPtr, boost::noncopyable>(
+			"OptionHandler", no_init)
+		.def("activateOptions", &log4cxx::spi::OptionHandler::activateOptions)
+		.def("setOption", &log4cxx::spi::OptionHandler::setOption)
+	;
+
 	class_<log4cxx::Level, log4cxx::LevelPtr, boost::noncopyable>("LogLevel", no_init)
 		.def("__eq__", eq)
 		.def("__ne__", ne)
@@ -152,11 +164,12 @@ BOOST_PYTHON_MODULE(pylogging)
 	;
 
 	class_<log4cxx::ColorLayout, log4cxx::ColorLayoutPtr, boost::noncopyable>(
-			"ColorLayout", init<bool>())
+			"ColorLayout", init< optional<bool, bool> >())
 	;
 	implicitly_convertible< log4cxx::ColorLayoutPtr, log4cxx::LayoutPtr>();
 
-	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable>("Appender", no_init)
+	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable,
+		bases<log4cxx::spi::OptionHandler> >("Appender", no_init)
 		.def("addFilter", &log4cxx::Appender::addFilter, "Add a filter to the end of the filter list.")
 	;
 
@@ -165,6 +178,12 @@ BOOST_PYTHON_MODULE(pylogging)
 		   boost::noncopyable,
 		   bases<log4cxx::Appender> >(
 			"ConsoleAppender", init<log4cxx::LayoutPtr>())
+		.def("setTarget", &log4cxx::ConsoleAppender::setTarget,
+				"Sets the value of the target property. Recognized values "
+				"are \"System.out\" and \"System.err\". Any other value will be "
+				"ignored.")
+		.def("getSystemOut", &log4cxx::ConsoleAppender::getSystemOut, ccr()).staticmethod("getSystemOut")
+		.def("getSystemErr", &log4cxx::ConsoleAppender::getSystemErr, ccr()).staticmethod("getSystemErr")
 	;
 	implicitly_convertible< log4cxx::ConsoleAppenderPtr, log4cxx::AppenderPtr>();
 
