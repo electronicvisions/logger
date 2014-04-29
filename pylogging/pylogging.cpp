@@ -107,6 +107,13 @@ namespace {
 		return logger->getAllAppenders().size();
 	}
 
+
+	void activateOptionsHelper(log4cxx::spi::OptionHandler & handler)
+	{
+		log4cxx::helpers::Pool pool;
+		handler.activateOptions(pool);
+	}
+
 }
 
 typedef return_value_policy<copy_const_reference> ccr;
@@ -122,6 +129,7 @@ BOOST_PYTHON_MODULE(pylogging)
 	class_<log4cxx::spi::OptionHandler, log4cxx::spi::OptionHandlerPtr, boost::noncopyable>(
 			"OptionHandler", no_init)
 		.def("activateOptions", &log4cxx::spi::OptionHandler::activateOptions)
+		.def("activateOptions", activateOptionsHelper)
 		.def("setOption", &log4cxx::spi::OptionHandler::setOption)
 	;
 
@@ -160,11 +168,13 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("_get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
 
-	class_<log4cxx::Layout, log4cxx::LayoutPtr, boost::noncopyable>("Layout", no_init)
+	class_<log4cxx::Layout, log4cxx::LayoutPtr, boost::noncopyable,
+		bases<log4cxx::spi::OptionHandler> >("Layout", no_init)
 	;
 
-	class_<log4cxx::ColorLayout, log4cxx::ColorLayoutPtr, boost::noncopyable>(
-			"ColorLayout", init< optional<bool, bool> >())
+	class_<log4cxx::ColorLayout, log4cxx::ColorLayoutPtr, boost::noncopyable,
+		bases<log4cxx::Layout> >(
+			"ColorLayout", init< optional<bool, log4cxx::LogString> >())
 	;
 	implicitly_convertible< log4cxx::ColorLayoutPtr, log4cxx::LayoutPtr>();
 
@@ -214,8 +224,21 @@ BOOST_PYTHON_MODULE(pylogging)
 	def("reset", logger_reset, "Reset the logger config");
 
 	def("default_config", logger_default_config, 
-			( arg("level") = log4cxx::Level::getWarn(), arg("fname")="", arg("dual")=false ),
-			"Load logger config from the given configuration file");
+			( arg("level") = log4cxx::Level::getWarn(),
+			  arg("fname")="",
+			  arg("dual")=false,
+			  arg("print_location")=false,
+			  arg("color")=true,
+			  arg("date_format")="ABSOLUTE"),
+		"This is the default configuration procedure for the logger\n"
+		"If the file 'symap2ic_logger.conf' is found, it is used to configure the\n"
+		"logger and every other argument is ignored!\n"
+		"@level: Log level\n"
+		"@arg fname: Log to this file, if empty to stdout\n"
+		"@arg dual: If file is given, log also to stdout\n"
+		"@print_location: Include location of error into log message\n"
+		"@use_color: Print colorfull\n"
+		"@arg date_format: values are: NULL, RELATIVE, ABSOLUTE, DATE, ISO8601\n");
 
 	def("config_from_file", logger_config_from_file,
 			"Load logger config from the given configuration file");

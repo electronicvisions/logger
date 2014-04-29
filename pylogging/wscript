@@ -5,6 +5,7 @@ try:
 except ImportError:
     from gtest import summary
 
+from waflib import Utils
 
 def load(ctx):
     ctx.load('compiler_cxx')
@@ -35,6 +36,12 @@ def build(bld):
             linkflags = ['-Wl,-zdefs'],
             install_path = '${PREFIX}/lib',
             post_task = 'pyloggingtest',
+    )
+
+    bld.install_files(
+            '${PREFIX}/bin',
+            'pylogging_config_example.py',
+            chmod=Utils.O755,
     )
 
     bld(

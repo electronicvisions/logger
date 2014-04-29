@@ -4,7 +4,8 @@
 #include <stdexcept>
 #include <iostream>
 
-void configure_default_logger(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level, std::string fname, bool dual)
+void configure_default_logger(log4cxx::LoggerPtr logger,
+		log4cxx::LevelPtr level, std::string fname, bool dual)
 {
 	if (fname.empty() && dual)
 		throw std::logic_error("dual log mode requires a filename");

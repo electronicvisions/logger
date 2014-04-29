@@ -50,33 +50,51 @@ log4cxx::AppenderPtr logger_append_to_cout(log4cxx::LoggerPtr logger)
 	return appender;
 }
 
-void logger_log_to_file(std::string filename, log4cxx::LevelPtr level)
+log4cxx::AppenderPtr logger_log_to_file(
+		std::string filename, log4cxx::LevelPtr level)
 {
-	logger_append_to_file(filename, log4cxx::Logger::getRootLogger());
+	log4cxx::AppenderPtr appender = logger_append_to_file(
+			filename, log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
+	return appender;
 }
 
-void logger_log_to_cout(log4cxx::LevelPtr level)
+log4cxx::AppenderPtr logger_log_to_cout(log4cxx::LevelPtr level)
 {
-	logger_append_to_cout(log4cxx::Logger::getRootLogger());
+	log4cxx::AppenderPtr appender = logger_append_to_cout(
+			log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
+	return appender;
 }
 
-void logger_default_config(log4cxx::LevelPtr level,
-		                   std::string fname, bool dual)
+void logger_default_config(
+		log4cxx::LevelPtr level, std::string fname, bool dual,
+		bool print_location, bool use_color, std::string date_format)
 {
 	using namespace boost::filesystem;
 
 	path logger_config("symap2ic_logger.conf");
 	if (exists(logger_config))
 	{
-		std::cerr << ">>>> config from: " << system_complete(logger_config).native() << std::endl;
 		logger_config_from_file(system_complete(logger_config).native());
 	}
 	else
 	{
 		configure_default_logger(log4cxx::Logger::getRootLogger(),
 				level, fname, dual);
+
+		log4cxx::helpers::Pool pool;
+		log4cxx::AppenderList list =
+			log4cxx::Logger::getRootLogger()->getAllAppenders();
+		for (log4cxx::AppenderList::iterator it = list.begin(), end = list.end();
+				it != end; ++it)
+		{
+			log4cxx::LayoutPtr layout = (*it)->getLayout();
+			layout->setOption("color", use_color ? "true" : "false");
+			layout->setOption("printlocation", print_location ? "true" : "false");
+			layout->setOption("dateformat", date_format);
+			layout->activateOptions(pool);
+		}
 	}
 }
 

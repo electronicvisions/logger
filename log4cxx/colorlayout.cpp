@@ -9,11 +9,10 @@ using namespace log4cxx::helpers;
 
 namespace log4cxx {
 
-ColorLayout::ColorLayout(bool use_color, bool print_time, bool relative_time) :
+ColorLayout::ColorLayout(bool use_color, LogString date_format) :
+	helpers::DateLayout(date_format),
 	mColorless(!use_color),
-	mPrintLocation(false),
-	mPrintTime(print_time),
-	mRelativeTime(relative_time)
+	mPrintLocation(false)
 {}
 
 void ColorLayout::setColor(bool value)
@@ -25,17 +24,6 @@ void ColorLayout::setPrintLocation(bool value)
 {
 	mPrintLocation = value;
 }
-
-void ColorLayout::setPrintTime(bool value)
-{
-	mPrintTime = value;
-}
-
-void ColorLayout::setRelativeTime(bool value)
-{
-	mRelativeTime = value;
-}
-
 
 void ColorLayout::format(LogString& _output,
 						 spi::LoggingEventPtr const& event,
@@ -71,20 +59,16 @@ void ColorLayout::format(LogString& _output,
 		output << color[Green];
 	}
 
+	LogString date;
+	formatDate(date, event, p);
+	if (!date.empty())
+		date += " ";
+	//formatDate(date, event->getTimeStamp(), p);
+
 	output
 		<< setw(6) << left << event->getLevel()->toString()
-		<< (colorless ? "" : color[Reset]);
-	if (mPrintTime)
-	{
-		LogString tmp;
-		if(mRelativeTime) {
-			helpers::RelativeTimeDateFormat().format(tmp, event->getTimeStamp(), p);
-		} else {
-			helpers::AbsoluteTimeDateFormat().format(tmp, event->getTimeStamp(), p);
-		}
-		output << setw(8) << right << tmp << "ms ";
-	}
-	output
+		<< (colorless ? "" : color[Reset])
+		<< date
 		<< event->getLoggerName() << " "
 		<< event->getRenderedMessage();
 	if (mPrintLocation) {
@@ -106,6 +90,7 @@ void ColorLayout::format(LogString& _output,
 
 void ColorLayout::setOption(const LogString& option,  const LogString& value)
 {
+	helpers::DateLayout::setOption(option, value);
 	if (StringHelper::equalsIgnoreCase(option, LOG4CXX_STR("COLOR"), LOG4CXX_STR("color")))
 	{
 		setColor(OptionConverter::toBoolean(value, false));
@@ -114,15 +99,6 @@ void ColorLayout::setOption(const LogString& option,  const LogString& value)
 	{
 		setPrintLocation(OptionConverter::toBoolean(value, false));
 	}
-	if (StringHelper::equalsIgnoreCase(option, LOG4CXX_STR("PRINTTIME"), LOG4CXX_STR("printtime")))
-	{
-		setPrintTime(OptionConverter::toBoolean(value, false));
-	}
-	if (StringHelper::equalsIgnoreCase(option, LOG4CXX_STR("RELATIVETIME"), LOG4CXX_STR("relativetime")))
-	{
-		setRelativeTime(OptionConverter::toBoolean(value, true));
-	}
-
 }
 
 

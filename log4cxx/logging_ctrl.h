@@ -25,9 +25,16 @@ void logger_reset();
 /// @level: Log level
 /// @arg fname: Log to this file, if empty to stdout
 /// @arg dual: If file is given, log also to stdout
-void logger_default_config(log4cxx::LevelPtr level = log4cxx::Level::getWarn(),
-		                   std::string fname = "",
-		                   bool dual = false);
+/// @print_location: Include location of error into log message
+/// @use_color: Print colorfull
+/// @arg date_format: values are: NULL, RELATIVE, ABSOLUTE, DATE, ISO8601
+void logger_default_config(
+		log4cxx::LevelPtr level = log4cxx::Level::getWarn(),
+		std::string fname = "",
+		bool dual = false,
+		bool print_location = false,
+		bool use_color = true,
+		std::string date_format = "ABSOLUTE");
 
 /// Load logger config from the given configuration file
 /// @see ???
@@ -42,10 +49,10 @@ log4cxx::AppenderPtr logger_append_to_cout(
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
 
 /// Configure the logger to log everything above the given loglevel to a fiel
-void logger_log_to_file(std::string filename, log4cxx::LevelPtr level);
+log4cxx::AppenderPtr logger_log_to_file(std::string filename, log4cxx::LevelPtr level);
 
 /// Configure the logger to log everything above the given loglevel to stdout
-void logger_log_to_cout(log4cxx::LevelPtr level);
+log4cxx::AppenderPtr logger_log_to_cout(log4cxx::LevelPtr level);
 
 /// Set the loglevel
 void logger_set_loglevel(log4cxx::LoggerPtr l, log4cxx::LevelPtr level);
