@@ -3,15 +3,17 @@
 #include <log4cxx/helpers/stringhelper.h>
 #include <log4cxx/helpers/optionconverter.h>
 #include <log4cxx/helpers/relativetimedateformat.h>
+#include <log4cxx/helpers/absolutetimedateformat.h>
 
 using namespace log4cxx::helpers;
 
 namespace log4cxx {
 
-ColorLayout::ColorLayout(bool use_color, bool print_time) :
+ColorLayout::ColorLayout(bool use_color, bool print_time, bool relative_time) :
 	mColorless(!use_color),
 	mPrintLocation(false),
-	mPrintTime(print_time)
+	mPrintTime(print_time),
+	mRelativeTime(relative_time)
 {}
 
 void ColorLayout::setColor(bool value)
@@ -27,6 +29,11 @@ void ColorLayout::setPrintLocation(bool value)
 void ColorLayout::setPrintTime(bool value)
 {
 	mPrintTime = value;
+}
+
+void ColorLayout::setRelativeTime(bool value)
+{
+	mRelativeTime = value;
 }
 
 
@@ -70,7 +77,11 @@ void ColorLayout::format(LogString& _output,
 	if (mPrintTime)
 	{
 		LogString tmp;
-		helpers::RelativeTimeDateFormat().format(tmp, event->getTimeStamp(), p);
+		if(mRelativeTime) {
+			helpers::RelativeTimeDateFormat().format(tmp, event->getTimeStamp(), p);
+		} else {
+			helpers::AbsoluteTimeDateFormat().format(tmp, event->getTimeStamp(), p);
+		}
 		output << setw(8) << right << tmp << "ms ";
 	}
 	output
@@ -107,6 +118,11 @@ void ColorLayout::setOption(const LogString& option,  const LogString& value)
 	{
 		setPrintTime(OptionConverter::toBoolean(value, false));
 	}
+	if (StringHelper::equalsIgnoreCase(option, LOG4CXX_STR("RELATIVETIME"), LOG4CXX_STR("relativetime")))
+	{
+		setRelativeTime(OptionConverter::toBoolean(value, true));
+	}
+
 }
 
 

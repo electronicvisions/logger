@@ -11,11 +11,12 @@ struct ColorLayout : public Layout
 {
 	DECLARE_LOG4CXX_OBJECT(ColorLayout)
 
-	ColorLayout(bool use_color=true, bool print_time=true);
+	ColorLayout(bool use_color=true, bool print_time=true, bool relative_time=false);
 
 	void setColor(bool value);
 	void setPrintLocation(bool value);
 	void setPrintTime(bool value);
+	void setRelativeTime(bool value);
 
 	virtual void format(LogString& output,
 						spi::LoggingEventPtr const& event,
@@ -30,6 +31,7 @@ private:
 	bool mColorless;
 	bool mPrintLocation;
 	bool mPrintTime;
+	bool mRelativeTime;
 };
 
 LOG4CXX_PTR_DEF(ColorLayout);
