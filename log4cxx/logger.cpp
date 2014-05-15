@@ -14,12 +14,14 @@ void configure_default_logger(log4cxx::LoggerPtr logger,
 
 	if (fname.empty() || dual)
 	{
-		logger_append_to_cout(logger);
+		log4cxx::AppenderPtr app = logger_append_to_cout(logger);
+		app->setName("COUT");
 	}
 
 	if (!fname.empty())
 	{
-		logger_append_to_file(fname, logger);
+		log4cxx::AppenderPtr app = logger_append_to_file(fname, logger);
+		app->setName("FILE");
 	}
 }
 

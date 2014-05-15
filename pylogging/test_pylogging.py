@@ -105,12 +105,13 @@ INFO  xyz.test INFO
             self.assertEqual(expected, f.read())
 
     def test_default_logger(self):
-        log_all  = os.path.join(self.temp, 'test_default_logger_all.log')
+        log_all = os.path.join(self.temp, 'test_default_logger_all.log')
         log_default = os.path.join(self.temp, 'test_default_logger_default.log')
 
         logger1 = logger.get("test")
 
-        logger.default_config(logger.LogLevel.DEBUG, log_all)
+        logger.default_config(logger.LogLevel.DEBUG, log_all,
+                date_format="NULL")
 
         # Loglevel should be ignored, because the root logger is configured
         logger_default = logger.get_old_logger(logger.LogLevel.TRACE)

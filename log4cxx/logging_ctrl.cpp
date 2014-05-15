@@ -90,7 +90,10 @@ void logger_default_config(
 				it != end; ++it)
 		{
 			log4cxx::LayoutPtr layout = (*it)->getLayout();
-			layout->setOption("color", use_color ? "true" : "false");
+			if ((*it)->getName() != "FILE")
+			{
+				layout->setOption("color", use_color ? "true" : "false");
+			}
 			layout->setOption("printlocation", print_location ? "true" : "false");
 			layout->setOption("dateformat", date_format);
 			layout->activateOptions(pool);

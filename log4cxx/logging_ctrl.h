@@ -26,7 +26,7 @@ void logger_reset();
 /// @arg fname: Log to this file, if empty to stdout
 /// @arg dual: If file is given, log also to stdout
 /// @print_location: Include location of error into log message
-/// @use_color: Print colorfull
+/// @use_color: Print colorfull, affects only console output
 /// @arg date_format: values are: NULL, RELATIVE, ABSOLUTE, DATE, ISO8601
 void logger_default_config(
 		log4cxx::LevelPtr level = log4cxx::Level::getWarn(),
