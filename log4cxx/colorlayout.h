@@ -18,7 +18,6 @@ struct ColorLayout : public helpers::DateLayout
 
 	void setColor(bool value);
 	void setPrintLocation(bool value);
-	void setDateFormat(const LogString& dateFormat1);
 
 	virtual void format(LogString& output,
 						spi::LoggingEventPtr const& event,
