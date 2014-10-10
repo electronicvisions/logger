@@ -209,6 +209,7 @@ BOOST_PYTHON_MODULE(pylogging)
 		   boost::noncopyable,
 		   bases<log4cxx::Appender> >(
 			"FileAppender", init<log4cxx::LayoutPtr, std::string, bool>())
+		.def("setFile",	static_cast<void (::log4cxx::FileAppender::*)(const log4cxx::LogString&)>(&log4cxx::FileAppender::setFile), "Set file name of FileAppender.")
 	;
 	implicitly_convertible< log4cxx::FileAppenderPtr, log4cxx::AppenderPtr>();
 
