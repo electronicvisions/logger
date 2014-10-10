@@ -140,13 +140,20 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("__ge__", ge)
 		.def("__lt__", lt)
 		.def("__le__", le)
-		.add_static_property("FATAL", getFatal)
+		.add_static_property("FATAL", log4cxx::Level::getFatal)
 		.add_static_property("ERROR", log4cxx::Level::getError)
 		.add_static_property("WARN",  log4cxx::Level::getWarn)
 		.add_static_property("INFO",  log4cxx::Level::getInfo)
 		.add_static_property("DEBUG", log4cxx::Level::getDebug)
 		.add_static_property("TRACE", log4cxx::Level::getTrace)
 		.add_static_property("ALL",   log4cxx::Level::getAll)
+		.def("toLevel",
+			static_cast<log4cxx::LevelPtr (*)(const std::string&, const log4cxx::LevelPtr &)>(log4cxx::Level::toLevel),
+			"Convert the string passed as argument to a level. If the "
+			"conversion fails, then this method returns the value of defaultLevel.")
+		.staticmethod("toLevel")
+		.def("toString",
+			static_cast<log4cxx::LogString (log4cxx::Level::*)() const>(&log4cxx::Level::toString))
 	;
 
 	class_<log4cxx::Logger, log4cxx::LoggerPtr, boost::noncopyable>("Logger", no_init)
