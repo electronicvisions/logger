@@ -172,6 +172,8 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("addAppender", &log4cxx::Logger::addAppender, "Add newAppender to the list of appenders of this Logger instance.\n"
 				                                           "If newAppender is already in the list of appenders, then it won't be added again.")
 		.def("setAdditivity", &log4cxx::Logger::setAdditivity, "Set the additivity flag for this Logger instance.")
+		.def("getName", static_cast<const log4cxx::LogString (log4cxx::Logger::*)() const>(&log4cxx::Logger::getName),
+			 "Get the logger name.")
 		.def("_get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
 
