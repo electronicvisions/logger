@@ -21,7 +21,7 @@
 /// Get a log4cxx logger, while mimik the configuration behaviour of the old logger
 /// The logger will only be configure, if neither the root logger nor the
 /// Default logger has an appender
-log4cxx::LoggerPtr get_default_logger(log4cxx::LevelPtr level, std::string fname, bool dual);
+log4cxx::LoggerPtr get_default_logger(std::string logger_name, log4cxx::LevelPtr level, std::string fname, bool dual);
 
 void configure_default_logger(log4cxx::LoggerPtr logger,
 		log4cxx::LevelPtr level, std::string fname, bool dual);
@@ -32,6 +32,7 @@ log4cxx::Logger&
 get_log4cxx(
 	// don't change default argument. It's an empty "smart" pointer on purpose
 	log4cxx::LevelPtr level = log4cxx::LevelPtr(),
+	std::string logger_name = "Default",
 	std::string fname = std::string(),
 	bool dual = false)
 {
@@ -40,7 +41,7 @@ get_log4cxx(
 	{
 		// never ever touch the allmighty &* ;)
 		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
-		_logger = &*get_default_logger(level, fname, dual);
+		_logger = &*get_default_logger(logger_name, level, fname, dual);
 	}
 	return *_logger;
 }
@@ -133,11 +134,12 @@ public:
 
 
 	static Logger& instance(
-			size_t level = LOGGER_DEFAULT_LEVEL,
-			std::string file = "",
-			bool dual = false)
+		std::string logger_name = "Default",
+		size_t level = LOGGER_DEFAULT_LEVEL,
+		std::string file = "",
+		bool dual = false)
 	{
-		get_log4cxx(log4cxx_level(level), file, dual);
+		get_log4cxx(log4cxx_level(level), logger_name, file, dual);
 		static Logger _logger(level);
 		return _logger;
 	}

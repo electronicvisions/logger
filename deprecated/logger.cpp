@@ -132,6 +132,7 @@ Logger::~Logger()
 }
 
 Logger& Logger::instance(
+		std::string,
 		size_t level,             //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
 		std::string filename,     //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 		bool dual
