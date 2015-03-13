@@ -404,7 +404,7 @@ public:
 		std::string filename="",
 		bool dual=false)
 	{
-		Logger * log_ptr = &(Logger::instance(level, filename, dual));
+		Logger * log_ptr = &(Logger::instance(prefix, level, filename, dual));
 		return *(new PrefixedLogger(prefix, log_ptr));
 	}
 
