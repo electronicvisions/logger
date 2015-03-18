@@ -13,7 +13,7 @@ int main()
     // this Logger will output its messages to stdout,
     // but the empty string can be replaced by a filename
 	// messages are auto-endlined. Therefore you don't need to stream a std::endl
-    Logger& log = Logger::instance(Logger::INFO, "");
+    Logger& log = Logger::instance("Default", Logger::INFO, "");
 
     log(Logger::DEBUG0) << "This message won't be recorded by the logger, since its criticality level (DEBUG0) is too low.";
     log(Logger::INFO) << "IMMER LOGGER BLEIBEN!";
