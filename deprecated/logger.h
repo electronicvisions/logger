@@ -127,6 +127,7 @@ public:
 	/*! This is the only way to create an instance of a Logger. Only the first call actually creates an instance,
 	  all further calls return a reference to the one and only instance. */
 	static Logger& instance(
+			std::string logger_name = "Default", //! API compatibility to log4cxx-based logger
 			size_t level=DEFAULT_LOG_THRESHOLD,  //! The logging threshold: every message with a level higher than this threshold will NOT be logged.
 			std::string filename="",             //! The logging file: If nothing or an empty string is passed, std::cout is the default target for all outputs.
 			bool dual=false
@@ -403,7 +404,7 @@ public:
 		std::string filename="",
 		bool dual=false)
 	{
-		Logger * log_ptr = &(Logger::instance(level, filename, dual));
+		Logger * log_ptr = &(Logger::instance(prefix, level, filename, dual));
 		return *(new PrefixedLogger(prefix, log_ptr));
 	}
 
