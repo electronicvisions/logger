@@ -128,11 +128,11 @@ INFO  xyz.test INFO
         logger.reset()
         with open(log_all) as f:
             expected = \
-"""FATAL Default FATAL
-ERROR Default ERROR
-WARN  Default WARN
-INFO  Default INFO
-DEBUG Default DEBUG
+"""FATAL PyLogging FATAL
+ERROR PyLogging ERROR
+WARN  PyLogging WARN
+INFO  PyLogging INFO
+DEBUG PyLogging DEBUG
 FATAL test FATAL
 ERROR test ERROR
 WARN  test WARN
@@ -143,11 +143,11 @@ DEBUG test DEBUG
 
         with open(log_default) as f:
             expected = \
-"""FATAL Default FATAL
-ERROR Default ERROR
-WARN  Default WARN
-INFO  Default INFO
-DEBUG Default DEBUG
+"""FATAL PyLogging FATAL
+ERROR PyLogging ERROR
+WARN  PyLogging WARN
+INFO  PyLogging INFO
+DEBUG PyLogging DEBUG
 """
             self.assertEqual(expected, f.read())
 

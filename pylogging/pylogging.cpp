@@ -98,7 +98,7 @@ namespace {
 
 	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
 	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
-	log4cxx::LoggerPtr get_old_logger(size_t level, std::string file, bool dual) {
+	log4cxx::LoggerPtr get_old_logger(log4cxx::LevelPtr level, std::string file, bool dual) {
 			log4cxx::Logger & l = get_log4cxx(level, "PyLogging", file, dual);
 			return log4cxx::LoggerPtr(&l);
 	}
@@ -272,7 +272,7 @@ BOOST_PYTHON_MODULE(pylogging)
 
 	def("get", get_logger, "Returns a logger for the given channel");
 	def("get_root", get_root_logger, "Returns a logger for the given channel");
-	def("get_old_logger", get_default_logger,
+	def("get_old_logger", get_old_logger,
 			(arg("level") = Logger::log4cxx_level(LOGGER_DEFAULT_LEVEL), arg("file") = "", arg("dual") = false),
 			"Returns the old style default logger, usage is deprecated");
 
