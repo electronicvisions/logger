@@ -116,6 +116,18 @@ namespace {
 
 }
 
+class PyWriter : public log4cxx::helpers::Writer
+{
+	void close(log4cxx::helpers::Pool &) {}
+	void flush(log4cxx::helpers::Pool &) {}
+	void write(const log4cxx::LogString &str, log4cxx::helpers::Pool &)
+	{
+		PySys_WriteStdout(str.c_str());
+	}
+};
+
+LOG4CXX_PTR_DEF(PyWriter);
+
 typedef return_value_policy<copy_const_reference> ccr;
 typedef return_value_policy<reference_existing_object> reo;
 
@@ -125,6 +137,15 @@ BOOST_PYTHON_MODULE(pylogging)
 			"Pool")
 	;
 
+	class_<PyWriter, PyWriterPtr, boost::noncopyable>(
+			"PyWriter",
+			"Writer class that writes to python stdout.\n"
+			"Example:\n"
+			"    appender = pylogging.log_to_cout(pylogging.LogLevel.WARN)\n"
+			"    appender.setWriter(pylogging.PyWriter())\n",
+			init<>())
+	;
+	implicitly_convertible<PyWriterPtr, log4cxx::helpers::WriterPtr>();
 
 	class_<log4cxx::spi::OptionHandler, log4cxx::spi::OptionHandlerPtr, boost::noncopyable>(
 			"OptionHandler", no_init)
@@ -188,7 +209,8 @@ BOOST_PYTHON_MODULE(pylogging)
 	implicitly_convertible< log4cxx::ColorLayoutPtr, log4cxx::LayoutPtr>();
 
 	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable,
-		bases<log4cxx::spi::OptionHandler> >("Appender", no_init)
+		bases<log4cxx::spi::OptionHandler> >(
+			"Appender", no_init)
 		.def("addFilter", &log4cxx::Appender::addFilter, "Add a filter to the end of the filter list.")
 	;
 
@@ -201,6 +223,7 @@ BOOST_PYTHON_MODULE(pylogging)
 				"Sets the value of the target property. Recognized values "
 				"are \"System.out\" and \"System.err\". Any other value will be "
 				"ignored.")
+		.def("setWriter", &log4cxx::ConsoleAppender::setWriter)
 		.def("getSystemOut", &log4cxx::ConsoleAppender::getSystemOut, ccr()).staticmethod("getSystemOut")
 		.def("getSystemErr", &log4cxx::ConsoleAppender::getSystemErr, ccr()).staticmethod("getSystemErr")
 	;
@@ -215,7 +238,10 @@ BOOST_PYTHON_MODULE(pylogging)
 	;
 	implicitly_convertible< log4cxx::FileAppenderPtr, log4cxx::AppenderPtr>();
 
-	class_<log4cxx::spi::Filter, log4cxx::spi::FilterPtr, boost::noncopyable>("Filter", no_init)
+	class_<log4cxx::spi::Filter,
+		   log4cxx::spi::FilterPtr,
+		   boost::noncopyable,
+		   bases<log4cxx::spi::OptionHandler> >("Filter", no_init)
 	;
 
 	class_<log4cxx::filter::LevelRangeFilter,
@@ -233,7 +259,7 @@ BOOST_PYTHON_MODULE(pylogging)
 
 	def("reset", logger_reset, "Reset the logger config");
 
-	def("default_config", logger_default_config, 
+	def("default_config", logger_default_config,
 			( arg("level") = log4cxx::Level::getWarn(),
 			  arg("fname")="",
 			  arg("dual")=false,
@@ -253,7 +279,7 @@ BOOST_PYTHON_MODULE(pylogging)
 	def("config_from_file", logger_config_from_file,
 			"Load logger config from the given configuration file");
 
-	def("append_to_file", logger_append_to_file, 
+	def("append_to_file", logger_append_to_file,
 			( arg("filename"), arg("logger") = log4cxx::Logger::getRootLogger()),
 			"adds a FileAppender to the given logger");
 
