@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 from waflib import Errors, Logs
-import os
+import argparse, os
 
 def options(opt):
     opt.load('compiler_cxx')
     opt.load('boost')
-    hopts = opt.add_option_group('Logger Options')
-    hopts.add_option('--enable-deprecated', action='store_true', default=False,
-                   help='Enable old logger (non-log4cxx version)')
-    hopts.add_option('--disable-colorlog', action='store_true', default=False,
-                   help='Disable color output for logger')
+    try:
+        # ECM: transition to new logger requires catching overlapping options with old logger
+        hopts = opt.add_option_group('Logger Options')
+        hopts.add_option('--enable-deprecated', action='store_true', default=False,
+                       help='Enable old logger (non-log4cxx version)')
+        hopts.add_option('--disable-colorlog', action='store_true', default=False,
+                       help='Disable color output for logger')
+    except argparse.ArgumentError:
+        pass
 
 
 def configure(cfg):
