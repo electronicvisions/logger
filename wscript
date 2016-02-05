@@ -44,7 +44,6 @@ def build(bld):
             'LOG4CXX',
         ],
         install_path = '${PREFIX}/lib',
-        cxxflags = ['-Wall', '-Wextra'],
     )
 
     for program in bld.path.ant_glob('usage_example/*.cpp'):
@@ -53,6 +52,5 @@ def build(bld):
                 source = [program],
                 use = ['logger_obj'],
                 install_path = '${PREFIX}/bin',
-                cxxflags = ['-Wall', '-Wextra', '-fPIC'],
         )
 
