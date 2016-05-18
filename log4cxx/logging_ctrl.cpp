@@ -31,18 +31,24 @@ void logger_config_from_file(std::string filename)
 }
 
 log4cxx::AppenderPtr
-logger_append_to_file(std::string filename, log4cxx::LoggerPtr logger)
+logger_append_to_file(std::string const& filename, log4cxx::LoggerPtr logger)
+{
+	return logger_write_to_file(filename, true, logger);
+}
+
+log4cxx::AppenderPtr
+logger_write_to_file(std::string const& filename, bool append, log4cxx::LoggerPtr logger)
 {
 	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout(false));
 	log4cxx::FileAppenderPtr appender(new log4cxx::FileAppender(
-				layout, filename, false));
+				layout, filename, append));
 	appender->setImmediateFlush(true);
 	logger->addAppender(appender);
 	return appender;
 }
 
 
-log4cxx::AppenderPtr logger_append_to_cout(log4cxx::LoggerPtr logger)
+log4cxx::AppenderPtr logger_write_to_cout(log4cxx::LoggerPtr logger)
 {
 	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout());
 	log4cxx::AppenderPtr appender(new log4cxx::ConsoleAppender(layout));
@@ -51,17 +57,17 @@ log4cxx::AppenderPtr logger_append_to_cout(log4cxx::LoggerPtr logger)
 }
 
 log4cxx::AppenderPtr logger_log_to_file(
-		std::string filename, log4cxx::LevelPtr level)
+	std::string const& filename, log4cxx::LevelPtr level)
 {
-	log4cxx::AppenderPtr appender = logger_append_to_file(
-			filename, log4cxx::Logger::getRootLogger());
+	log4cxx::AppenderPtr appender = logger_write_to_file(
+		filename, false, log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
 	return appender;
 }
 
 log4cxx::AppenderPtr logger_log_to_cout(log4cxx::LevelPtr level)
 {
-	log4cxx::AppenderPtr appender = logger_append_to_cout(
+	log4cxx::AppenderPtr appender = logger_write_to_cout(
 			log4cxx::Logger::getRootLogger());
 	log4cxx::Logger::getRootLogger()->setLevel(level);
 	return appender;

@@ -42,18 +42,23 @@ void logger_config_from_file(std::string filename);
 
 /// adds a FileAppender to the given logger
 log4cxx::AppenderPtr logger_append_to_file(
-		std::string filename, log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
+    std::string const& filename, log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
+
+/// adds a FileAppender to the given logger
+log4cxx::AppenderPtr logger_write_to_file(
+    std::string const& filename,
+    bool append = false,
+    log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
 
 /// adds a ConsoleAppender to the given logger
-log4cxx::AppenderPtr logger_append_to_cout(
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
+log4cxx::AppenderPtr
+logger_write_to_cout(log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger());
 
 /// Configure the logger to log everything above the given loglevel to a fiel
-log4cxx::AppenderPtr logger_log_to_file(std::string filename, log4cxx::LevelPtr level);
+log4cxx::AppenderPtr logger_log_to_file(std::string const& filename, log4cxx::LevelPtr level);
 
 /// Configure the logger to log everything above the given loglevel to stdout
 log4cxx::AppenderPtr logger_log_to_cout(log4cxx::LevelPtr level);
 
 /// Set the loglevel
 void logger_set_loglevel(log4cxx::LoggerPtr l, log4cxx::LevelPtr level);
-
