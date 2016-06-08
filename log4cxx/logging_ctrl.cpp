@@ -44,6 +44,11 @@ logger_write_to_file(std::string const& filename, bool append, log4cxx::LoggerPt
 				layout, filename, append));
 	appender->setImmediateFlush(true);
 	logger->addAppender(appender);
+
+	log4cxx::helpers::Pool pool;
+	layout->setOption("dateformat", "ISO8601");
+	layout->activateOptions(pool);
+
 	return appender;
 }
 
