@@ -290,6 +290,9 @@ BOOST_PYTHON_MODULE(pylogging)
 	def("write_to_cout", logger_write_to_cout, (arg("logger") = log4cxx::Logger::getRootLogger()),
 	    "adds a ConsoleAppender to the given logger");
 
+	def("append_to_cout", logger_write_to_cout, (arg("logger") = log4cxx::Logger::getRootLogger()),
+	    "adds a ConsoleAppender to the given logger");
+
 	def("log_to_file", logger_log_to_file,
 			"Configure the logger to log everything above the given loglevel to a file");
 
