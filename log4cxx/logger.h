@@ -18,6 +18,44 @@
 
 #define LOGGER_DEFAULT_LEVEL Logger::WARNING
 
+namespace visionary_logger {
+std::string print_backtrace() __attribute__ ((unused));
+}
+
+/// logger macros that print an additional backtrace
+#define LOG4CXX_DEBUG_BACKTRACE(logger, message) { \
+	LOG4CXX_DEBUG(logger, message); \
+	LOG4CXX_DEBUG(logger, visionary_logger::print_backtrace()); }
+
+#define LOG4CXX_TRACE_BACKTRACE(logger, message) { \
+	LOG4CXX_TRACE(logger, message); \
+	LOG4CXX_TRACE(logger, visionary_logger::print_backtrace()); }
+
+#define LOG4CXX_INFO_BACKTRACE(logger, message) { \
+	LOG4CXX_INFO(logger, message); \
+	LOG4CXX_INFO(logger, visionary_logger::print_backtrace()); }
+
+#define LOG4CXX_WARN_BACKTRACE(logger, message) { \
+	LOG4CXX_WARN(logger, message); \
+	LOG4CXX_WARN(logger, visionary_logger::print_backtrace()); }
+
+// same same
+#define LOG4CXX_ERROR_BACKTRACE(logger, message) LOG4CXX_ERROR(logger, message)
+
+/// We redefine the log4cxx's ERROR marco to include a backtrace.
+/// (copied macro definition from log4cxx/logger.h)
+#undef LOG4CXX_ERROR
+#define LOG4CXX_ERROR(logger, message) \
+	{ \
+		if (logger->isErrorEnabled()) { \
+			::log4cxx::helpers::MessageBuffer oss_; \
+			logger->forcedLog( \
+				::log4cxx::Level::getError(), \
+				oss_.str(oss_ << message << visionary_logger::print_backtrace()), \
+				LOG4CXX_LOCATION); \
+		} \
+	}
+
 /// Get a log4cxx logger, while mimik the configuration behaviour of the old logger
 /// The logger will only be configure, if neither the root logger nor the
 /// Default logger has an appender

@@ -1,8 +1,31 @@
 /* log4cxx-based logger needs cxx lib, nothing else */
 
-#include "logging_ctrl.h"
 #include <stdexcept>
 #include <iostream>
+
+extern "C" {
+#include <execinfo.h>
+}
+
+#include "logging_ctrl.h"
+
+namespace visionary_logger {
+
+std::string print_backtrace() {
+	std::stringstream ret;
+	ret << "print_trace: Printing stack backtrace\n";
+
+	void* array[10];
+	size_t size = backtrace(array, 10);
+	char** strings = backtrace_symbols(array, size);
+
+	for (size_t i = 0; i < size; i++)
+		ret << "print_trace: " << strings[i] << "\n";
+
+	return ret.str();
+}
+
+} // namespace visionary_logger
 
 void configure_default_logger(log4cxx::LoggerPtr logger,
 		log4cxx::LevelPtr level, std::string fname, bool dual)
