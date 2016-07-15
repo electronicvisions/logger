@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-import unittest
-import tempfile
+
+import os
+import re
 import shutil
-import os.path
+import tempfile
+import unittest
+
 import pylogging as logger
 
 class Test_Pylogging(unittest.TestCase):
@@ -10,6 +13,15 @@ class Test_Pylogging(unittest.TestCase):
         logger.reset();
         self.temp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp)
+
+    def assertEqualLogLines(self, a, b):
+        """
+        Compares log output while ignoring datetime segments.
+        """
+        re_datetime = re.compile(
+            "\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}\s*")
+        self.assertMultiLineEqual(
+            re_datetime.sub("", a), re_datetime.sub("", b))
 
     def test_reset(self):
         logger.log_to_cout(logger.LogLevel.WARN)
@@ -102,7 +114,7 @@ ERROR xyz.test ERROR
 WARN  xyz.test WARN
 INFO  xyz.test INFO
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
     def test_default_logger(self):
         log_all = os.path.join(self.temp, 'test_default_logger_all.log')
@@ -139,7 +151,7 @@ WARN  test WARN
 INFO  test INFO
 DEBUG test DEBUG
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
         with open(log_default) as f:
             expected = \
@@ -149,7 +161,7 @@ WARN  PyLogging WARN
 INFO  PyLogging INFO
 DEBUG PyLogging DEBUG
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
     def test_file_logging_with_filter(self):
         logger1 = logger.get("test");
@@ -200,7 +212,7 @@ DEBUG xyz DEBUG
 WARN  xyz.test WARN
 INFO  xyz.test INFO
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
         with open(log2) as f:
             expected = """FATAL test FATAL
@@ -210,7 +222,7 @@ ERROR xyz ERROR
 FATAL xyz.test FATAL
 ERROR xyz.test ERROR
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
         with open(log3) as f:
             expected = """FATAL xyz FATAL
@@ -218,7 +230,7 @@ ERROR xyz ERROR
 FATAL xyz.test FATAL
 ERROR xyz.test ERROR
 """
-            self.assertEqual(expected, f.read())
+            self.assertEqualLogLines(expected, f.read())
 
     def test_config_from_file(self):
         import inspect
