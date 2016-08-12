@@ -24,7 +24,7 @@ def build(bld):
     bld(
             target = 'pylogging',
             features = 'cxx cxxshlib pyembed pyext',
-            source = 'pylogging.cpp',
+            source = ['pylogging.cpp', 'python_logging_appender.cpp'],
             export_includes = '.',
             use = ['BOOST4PYLOGGING', 'logger_obj'],
             install_path = '${PREFIX}/lib',
