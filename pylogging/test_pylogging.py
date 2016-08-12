@@ -304,5 +304,68 @@ log4j.appender.A1.layout.PrintLocation=true
             expected = "".join(loglines)
             self.assertEqual(expected, f.read())
 
+    def test_append_to_logging(self):
+        # Store all Python logging messages in the "records" list
+        import logging
+        records = []
+        class Handler(logging.Handler):
+            def emit(self, record):
+                records.append({
+                    "name": record.name,
+                    "msg": record.msg,
+                    "levelno": record.levelno
+                })
+        logging.getLogger("").addHandler(Handler())
+
+        # Log messages to the "root" logger
+        logger.append_to_logging("root")
+        self.assertEqual(1, logger.get_root()._get_number_of_appenders())
+
+        # Create two test loggers
+        logger1 = logger.get("test1");
+        logger.set_loglevel(logger1, logger.LogLevel.TRACE)
+        logger2 = logger.get("test2");
+        logger3 = logger.get("test2.test3");
+
+        logger1.FATAL("msg1")
+        logger1.ERROR("msg2")
+        logger1.WARN("msg3")
+        logger1.INFO("msg4")
+        logger1.DEBUG("msg5")
+        logger1.TRACE("msg6")
+
+        logger2.FATAL("msg1")
+        logger2.ERROR("msg2")
+        logger2.WARN("msg3")
+        logger2.INFO("msg4")
+        logger2.DEBUG("msg5")
+        logger2.TRACE("msg6")
+
+        logger3.FATAL("msg1")
+        logger3.ERROR("msg2")
+        logger3.WARN("msg3")
+        logger3.INFO("msg4")
+        logger3.DEBUG("msg5")
+        logger3.TRACE("msg6")
+
+        self.assertEqual([
+            {'msg': 'msg1', 'levelno': 50, 'name': 'root.test1'},
+            {'msg': 'msg2', 'levelno': 40, 'name': 'root.test1'},
+            {'msg': 'msg3', 'levelno': 30, 'name': 'root.test1'},
+            {'msg': 'msg4', 'levelno': 20, 'name': 'root.test1'},
+            {'msg': 'msg5', 'levelno': 10, 'name': 'root.test1'},
+            {'msg': 'msg6', 'levelno': 10, 'name': 'root.test1'},
+            {'msg': 'msg1', 'levelno': 50, 'name': 'root.test2'},
+            {'msg': 'msg2', 'levelno': 40, 'name': 'root.test2'},
+            {'msg': 'msg3', 'levelno': 30, 'name': 'root.test2'},
+            {'msg': 'msg4', 'levelno': 20, 'name': 'root.test2'},
+            {'msg': 'msg5', 'levelno': 10, 'name': 'root.test2'},
+            {'msg': 'msg1', 'levelno': 50, 'name': 'root.test2.test3'},
+            {'msg': 'msg2', 'levelno': 40, 'name': 'root.test2.test3'},
+            {'msg': 'msg3', 'levelno': 30, 'name': 'root.test2.test3'},
+            {'msg': 'msg4', 'levelno': 20, 'name': 'root.test2.test3'},
+            {'msg': 'msg5', 'levelno': 10, 'name': 'root.test2.test3'}
+        ], records)
+
 if __name__ == '__main__':
     unittest.main()
