@@ -29,6 +29,7 @@ def build(bld):
             use = ['BOOST4PYLOGGING', 'logger_obj'],
             install_path = '${PREFIX}/lib',
             post_task = 'pyloggingtest',
+            cxxflags=['-std=c++11'],
     )
 
     bld.install_files(
