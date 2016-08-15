@@ -119,9 +119,11 @@ public:
 		// Delete the reference to the logger
 		m_logger = boost::python::object();
 	}
+
+	const std::string& domain() const { return m_domain; }
 };
 
-PythonLoggingAppender::PythonLoggingAppender(const std::string &domain)
+PythonLoggingAppender::PythonLoggingAppender(const std::string& domain)
     : m_impl(new PythonLoggingAppenderImpl(domain))
 {
 }
@@ -140,4 +142,10 @@ void PythonLoggingAppender::close()
 {
 	m_impl->close();
 }
+
+const std::string& PythonLoggingAppender::domain() const
+{
+	return m_impl->domain();
+}
+
 } // namespace log4cxx

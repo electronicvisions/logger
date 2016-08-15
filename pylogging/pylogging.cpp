@@ -119,6 +119,17 @@ namespace {
 	log4cxx::AppenderPtr logger_write_to_logging(
 	    std::string const& domain, log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger())
 	{
+		// Check whether a logger for this domain was already added -- if yes,
+		// do nothing. It makes no sense to log to the same logging domain
+		// multiple times
+		for (log4cxx::AppenderPtr& ptr : logger->getAllAppenders()) {
+			log4cxx::PythonLoggingAppender* pyapp =
+			    dynamic_cast<log4cxx::PythonLoggingAppender*>(&*ptr);
+			if (pyapp && pyapp->domain() == domain) {
+				return ptr;
+			}
+		}
+
 		log4cxx::AppenderPtr appender(new log4cxx::PythonLoggingAppender(domain));
 		logger->addAppender(appender);
 		return appender;
