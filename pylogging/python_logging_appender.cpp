@@ -34,6 +34,19 @@ private:
 	boost::python::object m_logger;
 
 	/**
+	 * Calls boost::python::exec, but only if the Python iterpreter is still
+	 * initialized. This is necessary, as log messages may be issued in atexit()
+	 * at which point the Python interpreter is already half finalized, leading
+	 * to a SIGSEV.
+	 */
+	static void python_safe_exec(const char *cmd, boost::python::dict &locals)
+	{
+		if (Py_IsInitialized()) {
+			boost::python::exec(cmd, boost::python::object(), locals);
+		}
+	}
+
+	/**
 	 * Initializes the m_logger variable if this has not been done yet.
 	 */
 	void init()
@@ -48,10 +61,11 @@ private:
 		locals["domain"] = m_domain;
 
 		// Fetch the logger
-		boost::python::exec(
-		    "import logging\nlogger = logging.getLogger(domain)\n",
-		    boost::python::object(), locals);
-		m_logger = locals["logger"];
+		python_safe_exec("import logging\nlogger = logging.getLogger(domain)\n",
+		                 locals);
+		if (locals.has_key("logger")) {
+			m_logger = locals["logger"];
+		}
 	}
 
 	/**
@@ -99,12 +113,11 @@ public:
 		std::string logger_name = event->getLoggerName();
 		if (!logger_name.empty()) {
 			locals["context"] = logger_name;
-			boost::python::exec("logger.getChild(context).log(level, message);",
-			                    boost::python::object(), locals);
+			python_safe_exec("logger.getChild(context).log(level, message);",
+			                 locals);
 		}
 		else {
-			boost::python::exec("logger.log(level, message);",
-			                    boost::python::object(), locals);
+			python_safe_exec("logger.log(level, message);", locals);
 		}
 	}
 
