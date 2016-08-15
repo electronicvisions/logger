@@ -21,12 +21,24 @@ def configure(cfg):
 
 def build(bld):
     bld.recurse('..')
+
+    bld.shlib(
+            target = 'logger_cxx2py',
+            features = 'pyembed',
+            name   = 'logger_cxx2py',
+            source = 'python_logging_appender.cpp',
+            export_includes = '.',
+            use = ['LOG4CXX', 'BOOST4PYLOGGING'],
+            install_path = '${PREFIX}/lib',
+            cxxflags=['-std=c++11'],
+    )
+
     bld(
             target = 'pylogging',
             features = 'cxx cxxshlib pyembed pyext',
-            source = ['pylogging.cpp', 'python_logging_appender.cpp'],
+            source = 'pylogging.cpp',
             export_includes = '.',
-            use = ['BOOST4PYLOGGING', 'logger_obj'],
+            use = ['BOOST4PYLOGGING', 'logger_obj', 'logger_cxx2py'],
             install_path = '${PREFIX}/lib',
             post_task = 'pyloggingtest',
             cxxflags=['-std=c++11'],
