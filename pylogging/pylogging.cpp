@@ -16,6 +16,7 @@
 #include "logging_ctrl.h"
 #include "logger.h"
 #include "colorlayout.h"
+#include "python_logging_appender.h"
 
 using namespace boost::python;
 
@@ -114,6 +115,27 @@ namespace {
 		handler.activateOptions(pool);
 	}
 
+
+	/// adds a ConsoleAppender to the given logger
+	log4cxx::AppenderPtr logger_write_to_logging(
+		std::string const &domain,
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger())
+	{
+		// Check whether a logger for this domain was already added -- if yes,
+		// do nothing. It makes no sense to log to the same logging domain
+		// multiple times
+		for (log4cxx::AppenderPtr &ptr : logger->getAllAppenders()) {
+			log4cxx::PythonLoggingAppender *pyapp =
+				dynamic_cast<log4cxx::PythonLoggingAppender*>(&*ptr);
+			if (pyapp && pyapp->domain() == domain) {
+				return ptr;
+			}
+		}
+
+		log4cxx::AppenderPtr appender(new log4cxx::PythonLoggingAppender(domain));
+		logger->addAppender(appender);
+		return appender;
+	}
 }
 
 class PyWriter : public log4cxx::helpers::Writer
@@ -292,6 +314,12 @@ BOOST_PYTHON_MODULE(pylogging)
 
 	def("append_to_cout", logger_write_to_cout, (arg("logger") = log4cxx::Logger::getRootLogger()),
 	    "adds a ConsoleAppender to the given logger");
+
+	def("write_to_logging", logger_write_to_logging, (arg("domain"), arg("logger") = log4cxx::Logger::getRootLogger()),
+	    "adds a PythonLoggingAppender to the given logger");
+
+	def("append_to_logging", logger_write_to_logging, (arg("domain"), arg("logger") = log4cxx::Logger::getRootLogger()),
+	    "adds a PythonLoggingAppender to the given logger");
 
 	def("log_to_file", logger_log_to_file,
 			"Configure the logger to log everything above the given loglevel to a file");
