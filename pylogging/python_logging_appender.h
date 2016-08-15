@@ -82,5 +82,10 @@ public:
 	 * class does not require a layout manager.
 	 */
 	bool requiresLayout() const override { return false; }
+
+	/**
+	 * Returns the "domain" string given in the constructor.
+	 */
+	const std::string &domain() const;
 };
 }

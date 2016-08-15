@@ -126,6 +126,8 @@ public:
 		// Delete the reference to the logger
 		m_logger = boost::python::object();
 	}
+
+	const std::string &domain() const { return m_domain; }
 };
 
 PythonLoggingAppender::PythonLoggingAppender(const std::string &domain)
@@ -145,4 +147,9 @@ void PythonLoggingAppender::append(const spi::LoggingEventPtr &event,
 }
 
 void PythonLoggingAppender::close() { m_impl->close(); }
+
+const std::string &PythonLoggingAppender::domain() const
+{
+	return m_impl->domain();
+}
 }

@@ -367,5 +367,34 @@ log4j.appender.A1.layout.PrintLocation=true
             {'msg': 'msg5', 'levelno': 10, 'name': 'root.test2.test3'}
         ], records)
 
+    def test_append_to_logging_multiple_calls(self):
+        import logging
+        records = []
+        class Handler(logging.Handler):
+            def emit(self, record):
+                records.append({
+                    "name": record.name,
+                    "msg": record.msg,
+                    "levelno": record.levelno
+                })
+        logging.getLogger("").addHandler(Handler())
+
+        # Log messages to the "root" logger
+        logger.append_to_logging("root")
+        logger.append_to_logging("root")
+        logger.append_to_logging("root")
+        logger.append_to_logging("root2")
+        logger.append_to_logging("root2")
+        logger.append_to_logging("root2")
+
+        # The message should only appear one time for each logger instead of
+        # multiple times
+        logger1 = logger.get("test1");
+        logger1.FATAL("msg1")
+        self.assertEqual([
+            {'msg': 'msg1', 'levelno': 50, 'name': 'root.test1'},
+            {'msg': 'msg1', 'levelno': 50, 'name': 'root2.test1'},
+        ], records)
+
 if __name__ == '__main__':
     unittest.main()
