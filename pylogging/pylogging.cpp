@@ -255,6 +255,9 @@ BOOST_PYTHON_MODULE(pylogging)
 		   bases<log4cxx::Appender> >(
 			"FileAppender", init<log4cxx::LayoutPtr, std::string, bool>())
 		.def("setFile",	static_cast<void (::log4cxx::FileAppender::*)(const log4cxx::LogString&)>(&log4cxx::FileAppender::setFile), "Set file name of FileAppender.")
+		.def(
+			"setImmediateFlush", &log4cxx::FileAppender::setImmediateFlush,
+			"Set whether to flush at the end of each write (defaults to true)")
 	;
 	implicitly_convertible< log4cxx::FileAppenderPtr, log4cxx::AppenderPtr>();
 
