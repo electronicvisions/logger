@@ -46,8 +46,6 @@ inline T * get_pointer(const ObjectPtrT<T> & ptr)
 #include "pylogging_wrapper.h"
 
 namespace {
-	log4cxx::LevelPtr getFatal() { return log4cxx::Level::getFatal(); }
-
 	bool eq(log4cxx::LevelPtr a, log4cxx::LevelPtr b) { return *a == *b; }
 	bool ne(log4cxx::LevelPtr a, log4cxx::LevelPtr b) { return *a != *b; }
 	bool gt(log4cxx::LevelPtr, log4cxx::LevelPtr) { throw std::runtime_error("No order defined on loglevels"); }

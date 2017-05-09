@@ -5,6 +5,8 @@
 
 extern "C" {
 #include <execinfo.h>
+#include <syslog.h>
+#include <unistd.h>
 }
 
 #include "logging_ctrl.h"
@@ -23,6 +25,29 @@ std::string print_backtrace() {
 		ret << "print_trace: " << strings[i] << "\n";
 
 	return ret.str();
+}
+
+std::string make_syslog_prefix() {
+	std::stringstream ret;
+	ret << "vislog"
+	    << " uid=" << getuid()
+		<< " pid=" << getpid();
+
+	char hostname[_POSIX_HOST_NAME_MAX + 1];
+	if (gethostname(hostname, sizeof hostname) == 0 ) {
+		ret << " hostname=" << hostname;
+	}
+	char * slurm_job_id = getenv("SLURM_JOBID");
+	if (slurm_job_id != nullptr ) {
+		ret << " SLURM_JOBID=" << slurm_job_id;
+	}
+	ret << "|";
+	return ret.str();
+}
+
+void write_to_syslog(std::string message) {
+	static const std::string prefix = make_syslog_prefix();
+	syslog(LOG_ERR, (prefix + message).c_str());
 }
 
 } // namespace visionary_logger

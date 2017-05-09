@@ -5,6 +5,8 @@ import argparse, os
 def options(opt):
     opt.load('compiler_cxx')
     opt.load('boost')
+    opt.load('gtest')
+
     try:
         # ECM: transition to new logger requires catching overlapping options with old logger
         hopts = opt.add_option_group('Logger Options')
@@ -19,6 +21,7 @@ def options(opt):
 def configure(cfg):
     cfg.load('compiler_cxx')
     cfg.load('boost')
+    cfg.load('gtest')
 
     cfg.check_boost('system thread filesystem', uselib_store='BOOST4LOGGER')
     if getattr(cfg.options, 'enable_deprecated', False):
@@ -45,6 +48,15 @@ def build(bld):
         ],
         install_path = '${PREFIX}/lib',
     )
+
+    bld.program(
+        features     = 'gtest',
+        source       = bld.path.ant_glob('test/*.cpp'),
+        target       = 'test_logger',
+        install_path = 'bin',
+        use          = ['logger_obj'],
+    )
+
 
     for program in bld.path.ant_glob('usage_example/*.cpp'):
         bld.program(
