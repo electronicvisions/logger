@@ -119,8 +119,15 @@ struct Message
 
 	~Message()
 	{
-		// do the actual logging
+		// do the actual logging (triggered by reset of Logger's _buffer)
 		get_log4cxx().log(level(), get().str(), LOG4CXX_LOCATION);
+	}
+
+	static void custom_cleanup(Message*)
+	{
+		// is only called on last delete of Message
+		// don't do anything to workaround multi thread issues
+		// FIXME
 	}
 
 private:
@@ -150,7 +157,7 @@ private:
 	size_t _last_level;
 
 	Logger(size_t level = LOGGER_DEFAULT_LEVEL) :
-		_buffer(),
+		_buffer(&Message::custom_cleanup),
 		_null(),
 		_level(level),
 		_last_level(level)
@@ -236,6 +243,10 @@ public:
 	operator() (size_t level)
 	{
 		_last_level = level;
+		if (_buffer.get() != NULL) {
+			auto m = _buffer.release();
+			delete m;
+		}
 		_buffer.reset(new Message(log4cxx_level(level)));
 		return _buffer->get();
 	}
