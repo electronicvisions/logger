@@ -21,8 +21,18 @@
 namespace visionary_logger {
 std::string print_backtrace() __attribute__ ((unused));
 std::string make_syslog_prefix() __attribute__ ((unused));
-/// Don't use it in signal handlers
-void write_to_syslog(std::string) __attribute__ ((unused));
+/// Prints a message to syslog, a prefix with general information will be added
+/// to the message
+/// Note: Don't use it in signal handlers
+void write_to_syslog(std::string msg) __attribute__((unused));
+/// Prints a message to syslog, a prefix with general information will be added
+/// to the message
+/// Note: Don't use it in signal handlers
+void write_to_syslog(
+    std::string msg,
+    log4cxx::LevelPtr level,
+    log4cxx::LoggerPtr logger,
+    log4cxx::spi::LocationInfo loc) __attribute__((unused));
 }
 
 /// logger macros that print an additional backtrace
@@ -50,35 +60,35 @@ void write_to_syslog(std::string) __attribute__ ((unused));
 /// (copied macro definition from log4cxx/logger.h)
 /// We always log to syslog at the cost of alwasy formating the message
 #undef LOG4CXX_ERROR
-#define LOG4CXX_ERROR(logger, message) \
-	{ \
-		::log4cxx::helpers::MessageBuffer oss_; \
-		std::string throw_message(oss_.str(oss_ << message)); \
-		if (logger->isErrorEnabled()) { \
-			logger->forcedLog( \
-				::log4cxx::Level::getError(), \
-				oss_.str(oss_ << visionary_logger::print_backtrace()), \
-				LOG4CXX_LOCATION); \
-		} \
-		visionary_logger::write_to_syslog(throw_message); \
+#define LOG4CXX_ERROR(logger, message)                                                             \
+	{                                                                                              \
+		log4cxx::LevelPtr level = ::log4cxx::Level::getError();                                    \
+		::log4cxx::spi::LocationInfo location = LOG4CXX_LOCATION;                                  \
+		::log4cxx::helpers::MessageBuffer oss_;                                                    \
+		std::string throw_message(oss_.str(oss_ << message));                                      \
+		if (logger->isErrorEnabled()) {                                                            \
+			logger->forcedLog(                                                                     \
+			    level, oss_.str(oss_ << visionary_logger::print_backtrace()), location);           \
+		}                                                                                          \
+		visionary_logger::write_to_syslog(throw_message, level, logger, location);                 \
 	}
 
 /// We redefine the log4cxx's FATAL marco to include a backtrace and to throw a
 /// runtime_error (copied macro definition from log4cxx/logger.h)
 /// We always log to syslog at the cost of alwasy formating the message
 #undef LOG4CXX_FATAL
-#define LOG4CXX_FATAL(logger, message) \
-	{ \
-		::log4cxx::helpers::MessageBuffer oss_; \
-		std::string throw_message(oss_.str(oss_ << message)); \
-		if (logger->isFatalEnabled()) { \
-			logger->forcedLog( \
-				::log4cxx::Level::getFatal(), \
-				oss_.str(oss_ << visionary_logger::print_backtrace()), \
-				LOG4CXX_LOCATION); \
-		} \
-		visionary_logger::write_to_syslog(throw_message); \
-		throw std::runtime_error(throw_message); \
+#define LOG4CXX_FATAL(logger, message)                                                             \
+	{                                                                                              \
+		log4cxx::LevelPtr level = ::log4cxx::Level::getFatal();                                    \
+		::log4cxx::spi::LocationInfo location = LOG4CXX_LOCATION;                                  \
+		::log4cxx::helpers::MessageBuffer oss_;                                                    \
+		std::string throw_message(oss_.str(oss_ << message));                                      \
+		if (logger->isFatalEnabled()) {                                                            \
+			logger->forcedLog(                                                                     \
+			    level, oss_.str(oss_ << visionary_logger::print_backtrace()), location);           \
+		}                                                                                          \
+		visionary_logger::write_to_syslog(throw_message, level, logger, location);                 \
+		throw std::runtime_error(throw_message);                                                   \
 	}
 
 /// Get a log4cxx logger, while mimik the configuration behaviour of the old logger

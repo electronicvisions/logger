@@ -9,6 +9,7 @@ extern "C" {
 #include <unistd.h>
 }
 
+#include "colorlayout.h"
 #include "logging_ctrl.h"
 
 namespace visionary_logger {
@@ -45,9 +46,38 @@ std::string make_syslog_prefix() {
 	return ret.str();
 }
 
+static log4cxx::LayoutPtr make_syslog_layout()
+{
+	using namespace log4cxx;
+
+	ColorLayoutPtr layout = new ColorLayout(false);
+	layout->setPrintLocation(true);
+	return layout;
+}
+
 void write_to_syslog(std::string message) {
 	static const std::string prefix = make_syslog_prefix();
 	syslog(LOG_ERR, (prefix + message).c_str());
+}
+
+void write_to_syslog(
+    std::string msg,
+    log4cxx::LevelPtr level,
+    log4cxx::LoggerPtr logger,
+    log4cxx::spi::LocationInfo loc)
+{
+	using namespace log4cxx;
+	using namespace log4cxx::helpers;
+	using namespace log4cxx::spi;
+
+	static const LayoutPtr layout = make_syslog_layout();
+
+	Pool p;
+	LoggingEventPtr event(new LoggingEvent(logger->getName(), level, msg, loc));
+
+	std::string logmsg;
+	layout->format(logmsg, event, p);
+	write_to_syslog(logmsg);
 }
 
 } // namespace visionary_logger
