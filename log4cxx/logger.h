@@ -254,7 +254,7 @@ public:
 	{
 		_last_level = level;
 		if (_buffer.get() != NULL) {
-			auto m = _buffer.release();
+			Message* m = _buffer.release();
 			delete m;
 		}
 		_buffer.reset(new Message(log4cxx_level(level)));
