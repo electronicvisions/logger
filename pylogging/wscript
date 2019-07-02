@@ -8,7 +8,6 @@ def load(ctx):
     ctx.load('boost')
     ctx.load('python')
     ctx.load('pytest')
-    ctx.load('post_task')
     ctx.recurse('..')
 
 def options(opt):
@@ -39,7 +38,6 @@ def build(bld):
             export_includes = '.',
             use = ['BOOST4PYLOGGING', 'logger_obj', 'logger_cxx2py'],
             install_path = '${PREFIX}/lib',
-            post_task = 'pyloggingtest',
     )
 
     bld.install_files(
