@@ -1,7 +1,6 @@
 /* log4cxx-based logger needs cxx lib, nothing else */
 
 #include <stdexcept>
-#include <iostream>
 
 extern "C" {
 #include <execinfo.h>
@@ -90,10 +89,14 @@ void configure_default_logger(log4cxx::LoggerPtr logger,
 
 	logger->setLevel(level);
 
-	if (fname.empty() || dual)
-	{
+	static bool already_added_cout = false;
+	if (logger->getAllAppenders().size() == 0) {
+		already_added_cout = false;
+	}
+	if ((fname.empty() || dual) && !already_added_cout) {
 		log4cxx::AppenderPtr app = logger_write_to_cout(logger);
 		app->setName("COUT");
+		already_added_cout = true;
 	}
 
 	if (!fname.empty())
