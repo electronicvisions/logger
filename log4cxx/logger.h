@@ -213,6 +213,60 @@ public:
 		DEBUG3 = 6
 	};
 
+	/**
+	 * Fixed version of log4cxx_level that maps loglevels to their actual
+	 * counter-parts in log4cxx without inverting the order.
+	 *
+	 * Notice that the loglevels in log4cxx are defined as follows in include/log4cxx/level.h:
+	 *
+	 * ```cpp
+	 * enum {
+	 *     OFF_INT = INT_MAX,
+	 *     FATAL_INT = 50000,
+	 *     ERROR_INT = 40000,
+	 *     WARN_INT = 30000,
+	 *     INFO_INT = 20000,
+	 *     DEBUG_INT = 10000,
+	 *     TRACE_INT = 5000,
+	 *     ALL_INT = INT_MIN
+	 * };
+	 * ```
+	 * For our intends and purposes it suffices to divide everything by 10000 to get a mapping that
+	 * mirrors our current waf setup:
+	 *
+	 * TRACE   -> 0
+	 * DEBUG   -> 1
+	 * INFO    -> 2
+	 * WARNING -> 3
+	 * ERROR   -> 4
+	 * FATAL   -> 5
+	 *
+	 * NOTE: In order to not break existing dependencies this function was introduced with the `_v2`
+	 * suffix. Pending the complete rewrite and streamlining of the logging library that is properly
+	 * namespaced, both functions should be merged once again.
+	 *
+	 * --obreitwi, 20-07-20 15:13:37
+	 */
+	static log4cxx::LevelPtr log4cxx_level_v2(size_t level)
+	{
+		switch (level) {
+			case 0: // TRACE
+				return log4cxx::Level::getTrace();
+			case 1: // DEBUG
+				return log4cxx::Level::getDebug();
+			case 2: // INFO
+				return log4cxx::Level::getInfo();
+			case 3: // WARNING
+				return log4cxx::Level::getWarn();
+			case 4: // ERROR
+				return log4cxx::Level::getError();
+			case 5: // FATAL
+				return log4cxx::Level::getFatal();
+			default:
+				return log4cxx::Level::getAll();
+		}
+	}
+
 	static levels logger_level(log4cxx::LevelPtr level)
 	{
 		if (level->isGreaterOrEqual(log4cxx::Level::getError()))
