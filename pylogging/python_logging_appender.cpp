@@ -17,9 +17,7 @@
  */
 #include <iostream>
 
-#include <boost/python/dict.hpp>
-#include <boost/python/exec.hpp>
-#include <boost/python/object.hpp>
+#include <boost/python.hpp>
 
 #include "python_logging_appender.h"
 
