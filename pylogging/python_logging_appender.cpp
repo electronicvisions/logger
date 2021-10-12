@@ -17,6 +17,13 @@
  */
 #include <iostream>
 
+/* boost::python still uses the global bind placeholders _1, _2, ...;
+ * to be removed as soon as boost::python is fixed (it isn't as of boost 1.77).
+ */
+#ifndef BOOST_BIND_GLOBAL_PLACEHOLDERS
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#endif
+
 #include <boost/python.hpp>
 
 #include "python_logging_appender.h"
