@@ -31,9 +31,9 @@ class Test_Pylogging(unittest.TestCase):
 
         logger.reset()
 
-        self.assertEqual(0, logger1._get_number_of_appenders())
-        self.assertEqual(0, logger2._get_number_of_appenders())
-        self.assertEqual(0, logger.get_root()._get_number_of_appenders())
+        self.assertEqual(0, logger1.get_number_of_appenders())
+        self.assertEqual(0, logger2.get_number_of_appenders())
+        self.assertEqual(0, logger.get_root().get_number_of_appenders())
 
     def test_cout_logging(self):
         logger.log_to_cout(logger.LogLevel.WARN)
@@ -322,7 +322,7 @@ log4j.appender.A1.layout.PrintLocation=true
 
         # Log messages to the "root" logger
         logger.append_to_logging("root")
-        self.assertEqual(1, logger.get_root()._get_number_of_appenders())
+        self.assertEqual(1, logger.get_root().get_number_of_appenders())
 
         # Create two test loggers
         logger1 = logger.get("test1");

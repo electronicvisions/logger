@@ -220,7 +220,7 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("setAdditivity", &log4cxx::Logger::setAdditivity, "Set the additivity flag for this Logger instance.")
 		.def("getName", static_cast<const log4cxx::LogString (log4cxx::Logger::*)() const>(&log4cxx::Logger::getName),
 			 "Get the logger name.")
-		.def("_get_number_of_appenders", get_number_of_appenders, "for debug/test use")
+		.def("get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
 
 	class_<log4cxx::Layout, log4cxx::LayoutPtr, boost::noncopyable,
