@@ -109,20 +109,18 @@ void configure_default_logger(
     log4cxx::LoggerPtr logger, log4cxx::LevelPtr level, std::string fname, bool dual);
 
 /// gets the "Default" instance from log4cxx
-inline log4cxx::Logger& get_log4cxx(
+inline log4cxx::LoggerPtr get_log4cxx(
     // don't change default argument. It's an empty "smart" pointer on purpose
     log4cxx::LevelPtr level = log4cxx::LevelPtr(),
     std::string logger_name = "Default",
     std::string fname = std::string(),
     bool dual = false)
 {
-	static log4cxx::Logger* _logger;
+	static log4cxx::LoggerPtr _logger;
 	if (!_logger) {
-		// never ever touch the allmighty &* ;)
-		//   http://osdir.com/ml/apache.logging.log4cxx.devel/2004-11/msg00028.html
-		_logger = &*get_default_logger(logger_name, level, fname, dual);
+		_logger = get_default_logger(logger_name, level, fname, dual);
 	}
-	return *_logger;
+	return _logger;
 }
 
 struct Message
@@ -141,7 +139,7 @@ struct Message
 	~Message()
 	{
 		// do the actual logging (triggered by reset of Logger's _buffer)
-		get_log4cxx().log(level(), get().str(), LOG4CXX_LOCATION);
+		get_log4cxx()->log(level(), get().str(), LOG4CXX_LOCATION);
 	}
 
 	static void custom_cleanup(Message*)

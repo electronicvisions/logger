@@ -49,7 +49,7 @@ static log4cxx::LayoutPtr make_syslog_layout()
 {
 	using namespace log4cxx;
 
-	ColorLayoutPtr layout = new ColorLayout(false);
+	ColorLayoutPtr layout{new ColorLayout(false)};
 	layout->setPrintLocation(true);
 	return layout;
 }
@@ -101,7 +101,7 @@ void configure_default_logger(log4cxx::LoggerPtr logger,
 
 	if (!fname.empty())
 	{
-		log4cxx::AppenderPtr app = logger_write_to_file(fname, logger);
+		log4cxx::AppenderPtr app = logger_write_to_file(fname, true, logger);
 		app->setName("FILE");
 	}
 }

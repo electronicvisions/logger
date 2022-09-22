@@ -1,3 +1,4 @@
+#include <memory>
 #include <iostream>
 
 /* boost::python still uses the global bind placeholders _1, _2, ...;
@@ -30,7 +31,7 @@ using namespace boost::python;
 namespace boost {
 namespace python {
 
-template <class T> struct pointee<log4cxx::helpers::ObjectPtrT<T> >
+template <class T> struct pointee<std::shared_ptr<T> >
 {
 	typedef T type;
 };
@@ -40,12 +41,6 @@ template <class T> struct pointee<log4cxx::helpers::ObjectPtrT<T> >
 
 namespace log4cxx {
 namespace helpers {
-
-template <typename T>
-inline T * get_pointer(const ObjectPtrT<T> & ptr)
-{
-	return static_cast<T*>(ptr);
-}
 
 } // namespace helpers
 } // namespace log4cxx
@@ -105,8 +100,7 @@ namespace {
 	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
 	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
 	log4cxx::LoggerPtr get_old_logger(log4cxx::LevelPtr level, std::string file, bool dual) {
-			log4cxx::Logger & l = get_log4cxx(level, "PyLogging", file, dual);
-			return log4cxx::LoggerPtr(&l);
+			return get_log4cxx(level, "PyLogging", file, dual);
 	}
 
 	size_t get_number_of_appenders(log4cxx::LoggerPtr logger) {
@@ -218,7 +212,7 @@ BOOST_PYTHON_MODULE(pylogging)
 		.def("addAppender", &log4cxx::Logger::addAppender, "Add newAppender to the list of appenders of this Logger instance.\n"
 				                                           "If newAppender is already in the list of appenders, then it won't be added again.")
 		.def("setAdditivity", &log4cxx::Logger::setAdditivity, "Set the additivity flag for this Logger instance.")
-		.def("getName", static_cast<const log4cxx::LogString (log4cxx::Logger::*)() const>(&log4cxx::Logger::getName),
+		.def("getName", static_cast<log4cxx::LogString const& (log4cxx::Logger::*)() const>(&log4cxx::Logger::getName), ccr(),
 			 "Get the logger name.")
 		.def("get_number_of_appenders", get_number_of_appenders, "for debug/test use")
 	;
