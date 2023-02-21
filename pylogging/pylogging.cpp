@@ -100,7 +100,7 @@ namespace {
 	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
 	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
 	log4cxx::LoggerPtr get_old_logger(log4cxx::LevelPtr level, std::string file, bool dual) {
-			return get_log4cxx(level, "PyLogging", file, dual);
+			return get_default_logger("PyLogging", level, file, dual);
 	}
 
 	size_t get_number_of_appenders(log4cxx::LoggerPtr logger) {

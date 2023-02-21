@@ -108,21 +108,6 @@ log4cxx::LoggerPtr get_default_logger(
 void configure_default_logger(
     log4cxx::LoggerPtr logger, log4cxx::LevelPtr level, std::string fname, bool dual);
 
-/// gets the "Default" instance from log4cxx
-inline log4cxx::LoggerPtr get_log4cxx(
-    // don't change default argument. It's an empty "smart" pointer on purpose
-    log4cxx::LevelPtr level = log4cxx::LevelPtr(),
-    std::string logger_name = "Default",
-    std::string fname = std::string(),
-    bool dual = false)
-{
-	static log4cxx::LoggerPtr _logger;
-	if (!_logger) {
-		_logger = get_default_logger(logger_name, level, fname, dual);
-	}
-	return _logger;
-}
-
 struct Message
 {
 	std::ostringstream& get()
@@ -139,7 +124,7 @@ struct Message
 	~Message()
 	{
 		// do the actual logging (triggered by reset of Logger's _buffer)
-		get_log4cxx()->log(level(), get().str(), LOG4CXX_LOCATION);
+		get_default_logger("Default", log4cxx::LevelPtr(), std::string(), false)->log(level(), get().str(), LOG4CXX_LOCATION);
 	}
 
 	static void custom_cleanup(Message*)
@@ -286,7 +271,7 @@ public:
 	    std::string file = "",
 	    bool dual = false)
 	{
-		get_log4cxx(log4cxx_level(level), logger_name, file, dual);
+		get_default_logger(logger_name, log4cxx_level(level), file, dual);
 		static Logger _logger(level);
 		return _logger;
 	}
