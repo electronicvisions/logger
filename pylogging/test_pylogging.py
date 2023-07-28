@@ -124,7 +124,7 @@ INFO  xyz.test INFO
         logger1 = logger.get("test")
 
         logger.default_config(logger.LogLevel.DEBUG, log_all,
-                date_format="NULL")
+                date_format="")
 
         # Loglevel should be ignored, because the root logger is configured
         logger_default = logger.get_old_logger(logger.LogLevel.TRACE)
@@ -242,7 +242,7 @@ ERROR xyz.test ERROR
         with open(config, 'w') as f:
             f.write("""
 # Set root logger level to DEBUG and its only appender to A1.
-log4j.rootLogger=WARN, A1
+log4j.rootCategory=WARN, A1
 
 # More detail from xyz, but only a bit more from xyz.test
 log4j.logger.xyz=TRACE
@@ -250,14 +250,14 @@ log4j.logger.xyz.test=INFO
 
 # A1 is set to be a ConsoleAppender.
 log4j.appender.A1=org.apache.log4j.FileAppender
-log4j.appender.A1.File={log}
+log4j.appender.A1.file={log}
 #log4j.appender.A1=org.apache.log4j.ConsoleAppender
 
-# A1 uses PatternLayout.
-log4j.appender.A1.layout=org.apache.log4j.ColorLayout
-log4j.appender.A1.layout.Color=true
-log4j.appender.A1.layout.PrintLocation=true
+## A1 uses PatternLayout.
+log4j.appender.A1.layout=org.apache.log4j.PatternLayout
+log4j.appender.A1.layout.ConversionPattern=%Y%-5p %y%c %m\\n  -> [33m%F[0m:[31m%L[0m\\n
 """.format(log=log))
+        self.maxDiff = None
 
         logger.config_from_file(config)
 
@@ -278,22 +278,22 @@ log4j.appender.A1.layout.PrintLocation=true
             loglines.append('\n')
 
 
-        logger.LOG4CXX_FATAL(logger1, "FATAL"); logln("[31mFATAL [0mtest FATAL")
+        logger.LOG4CXX_FATAL(logger1, "FATAL"); logln("[35mFATAL [0mtest FATAL")
         logger.LOG4CXX_ERROR(logger1, "ERROR"); logln("[31mERROR [0mtest ERROR")
         logger.LOG4CXX_WARN (logger1, "WARN");  logln("[33mWARN  [0mtest WARN")
         logger.LOG4CXX_INFO (logger1, "INFO")
         logger.LOG4CXX_DEBUG(logger1, "DEBUG")
         logger.LOG4CXX_TRACE(logger1, "TRACE")
 
-        logger2.FATAL("FATAL") ;logln("[31mFATAL [0mxyz FATAL")
+        logger2.FATAL("FATAL") ;logln("[35mFATAL [0mxyz FATAL")
         logger2.ERROR("ERROR") ;logln("[31mERROR [0mxyz ERROR")
         logger2.WARN ("WARN")  ;logln("[33mWARN  [0mxyz WARN")
         logger2.INFO ("INFO")  ;logln("[32mINFO  [0mxyz INFO")
-        logger2.DEBUG("DEBUG") ;logln("[32mDEBUG [0mxyz DEBUG")
-        logger2.TRACE("TRACE") ;logln("[32mTRACE [0mxyz TRACE")
+        logger2.DEBUG("DEBUG") ;logln("[36mDEBUG [0mxyz DEBUG")
+        logger2.TRACE("TRACE") ;logln("[34mTRACE [0mxyz TRACE")
 
 
-        logger.LOG4CXX_FATAL(logger3, "FATAL") ;logln("[31mFATAL [0mxyz.test FATAL")
+        logger.LOG4CXX_FATAL(logger3, "FATAL") ;logln("[35mFATAL [0mxyz.test FATAL")
         logger.LOG4CXX_ERROR(logger3, "ERROR") ;logln("[31mERROR [0mxyz.test ERROR")
         logger.LOG4CXX_WARN (logger3, "WARN")  ;logln("[33mWARN  [0mxyz.test WARN")
         logger.LOG4CXX_INFO (logger3, "INFO")  ;logln("[32mINFO  [0mxyz.test INFO")

@@ -23,7 +23,6 @@
 
 #include "logging_ctrl.h"
 #include "logger.h"
-#include "colorlayout.h"
 #include "python_logging_appender.h"
 
 using namespace boost::python;
@@ -214,11 +213,10 @@ BOOST_PYTHON_MODULE(pylogging)
 		bases<log4cxx::spi::OptionHandler> >("Layout", no_init)
 	;
 
-	class_<log4cxx::ColorLayout, log4cxx::ColorLayoutPtr, boost::noncopyable,
-		bases<log4cxx::Layout> >(
-			"ColorLayout", init< optional<bool, log4cxx::LogString> >())
-	;
-	implicitly_convertible< log4cxx::ColorLayoutPtr, log4cxx::LayoutPtr>();
+	class_<
+	    log4cxx::PatternLayout, log4cxx::PatternLayoutPtr, boost::noncopyable,
+	    bases<log4cxx::Layout> >("PatternLayout", init<optional<log4cxx::LogString> >());
+	implicitly_convertible<log4cxx::PatternLayoutPtr, log4cxx::LayoutPtr>();
 
 	class_<log4cxx::Appender, log4cxx::AppenderPtr, boost::noncopyable,
 		bases<log4cxx::spi::OptionHandler> >(

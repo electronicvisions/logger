@@ -5,11 +5,11 @@
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/fileappender.h>
+#include <log4cxx/patternlayout.h>
 #include <log4cxx/propertyconfigurator.h>
 
 #include <boost/filesystem.hpp>
 
-#include "colorlayout.h"
 #include "logger.h"
 
 void logger_reset()
@@ -39,23 +39,18 @@ logger_append_to_file(std::string const& filename, log4cxx::LoggerPtr logger)
 log4cxx::AppenderPtr
 logger_write_to_file(std::string const& filename, bool append, log4cxx::LoggerPtr logger)
 {
-	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout(false));
+	log4cxx::LayoutPtr layout(new log4cxx::PatternLayout("%-5p %d{ISO8601}  %c %m\n"));
 	log4cxx::FileAppenderPtr appender(new log4cxx::FileAppender(
 				layout, filename, append));
 	appender->setImmediateFlush(true);
 	logger->addAppender(appender);
-
-	log4cxx::helpers::Pool pool;
-	layout->setOption("dateformat", "ISO8601");
-	layout->activateOptions(pool);
-
 	return appender;
 }
 
 
 log4cxx::AppenderPtr logger_write_to_cout(log4cxx::LoggerPtr logger)
 {
-	log4cxx::LayoutPtr layout(new log4cxx::ColorLayout());
+	log4cxx::LayoutPtr layout(new log4cxx::PatternLayout("%Y%-5p%y %d{HH:mm:ss,SSS}  %c %m\n"));
 	log4cxx::AppenderPtr appender(new log4cxx::ConsoleAppender(layout));
 	logger->addAppender(appender);
 	return appender;
@@ -100,13 +95,13 @@ void logger_default_config(
 		for (log4cxx::AppenderList::iterator it = list.begin(), end = list.end();
 				it != end; ++it)
 		{
-			log4cxx::LayoutPtr layout = (*it)->getLayout();
-			if ((*it)->getName() != "FILE")
-			{
-				layout->setOption("color", use_color ? "true" : "false");
-			}
-			layout->setOption("printlocation", print_location ? "true" : "false");
-			layout->setOption("dateformat", date_format);
+			bool const local_use_color = ((*it)->getName() != "FILE") ? use_color : false;
+			log4cxx::PatternLayoutPtr layout =
+			    dynamic_pointer_cast<log4cxx::PatternLayout>((*it)->getLayout());
+			layout->setConversionPattern(
+			    (local_use_color ? std::string("%Y") : std::string()) + "%-5p" +
+			    (local_use_color ? std::string("%y") : std::string()) + " %d{" + date_format +
+			    "}  %c %m\n" + (print_location ? std::string("  ->  %F:%L\n") : std::string()));
 			layout->activateOptions(pool);
 		}
 	}
