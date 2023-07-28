@@ -8,8 +8,8 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include "colorlayout.h"
 #include "logging_ctrl.h"
+#include <log4cxx/patternlayout.h>
 
 namespace visionary_logger {
 
@@ -49,8 +49,8 @@ static log4cxx::LayoutPtr make_syslog_layout()
 {
 	using namespace log4cxx;
 
-	ColorLayoutPtr layout{new ColorLayout(false)};
-	layout->setPrintLocation(true);
+	log4cxx::LayoutPtr layout{
+	    new log4cxx::PatternLayout("%-5pi %d{HH:mm:ss,SSS}  %c %m\n  ->  %C\n")};
 	return layout;
 }
 

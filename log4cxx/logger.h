@@ -13,7 +13,6 @@
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 
-#include "colorlayout.h"
 #include "logging_ctrl.h"
 
 #define LOGGER_DEFAULT_LEVEL Logger::WARNING
