@@ -27,7 +27,6 @@ def build(bld):
             source = 'pylogging.cpp python_logging_appender.cpp',
             export_includes = '.',
             use = ['BOOST4PYLOGGING', 'logger_obj'],
-            install_path = '${PREFIX}/lib',
     )
 
     bld.install_files(
