@@ -83,19 +83,12 @@ namespace {
 		return object();
 	}
 
-	log4cxx::LevelPtr FATAL = log4cxx::Level::getFatal();
-	log4cxx::LevelPtr ERROR = log4cxx::Level::getError();
-	log4cxx::LevelPtr WARN  = log4cxx::Level::getWarn();
-	log4cxx::LevelPtr INFO  = log4cxx::Level::getInfo();
-	log4cxx::LevelPtr DEBUG = log4cxx::Level::getDebug();
-	log4cxx::LevelPtr TRACE = log4cxx::Level::getTrace();
-
-	object LOG_FATAL (tuple args, dict) { return log(FATAL, args); }
-	object LOG_ERROR (tuple args, dict) { return log(ERROR, args); }
-	object LOG_WARN  (tuple args, dict) { return log(WARN , args); }
-	object LOG_INFO  (tuple args, dict) { return log(INFO , args); }
-	object LOG_DEBUG (tuple args, dict) { return log(DEBUG, args); }
-	object LOG_TRACE (tuple args, dict) { return log(TRACE, args); }
+	object LOG_FATAL (tuple args, dict) { return log(log4cxx::Level::getFatal(), args); }
+	object LOG_ERROR (tuple args, dict) { return log(log4cxx::Level::getError(), args); }
+	object LOG_WARN  (tuple args, dict) { return log(log4cxx::Level::getWarn(),  args); }
+	object LOG_INFO  (tuple args, dict) { return log(log4cxx::Level::getInfo(),  args); }
+	object LOG_DEBUG (tuple args, dict) { return log(log4cxx::Level::getDebug(), args); }
+	object LOG_TRACE (tuple args, dict) { return log(log4cxx::Level::getTrace(), args); }
 
 	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
 	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
