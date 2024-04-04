@@ -14,10 +14,11 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/pure_virtual.hpp>
 
-#include <log4cxx/logger.h>
-#include <log4cxx/layout.h>
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/fileappender.h>
+#include <log4cxx/layout.h>
+#include <log4cxx/logger.h>
+#include <log4cxx/patternlayout.h>
 
 #include <log4cxx/filter/levelrangefilter.h>
 
@@ -68,7 +69,9 @@ namespace {
 			std::string filename = extract<std::string>(frameinfo.attr("filename"));
 			std::string function = extract<std::string>(frameinfo.attr("function"));
 			int lineno = extract<int>(frameinfo.attr("lineno"));
-			log4cxx::spi::LocationInfo location(filename.c_str(), function.c_str(), lineno);
+			log4cxx::spi::LocationInfo location(
+				filename.c_str(), log4cxx::spi::LocationInfo::calcShortFileName(filename.c_str()),
+				function.c_str(), lineno);
 
 			stl_input_iterator<object> it(args), end;
 			++it; // Skip logger
