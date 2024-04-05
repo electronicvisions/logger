@@ -8,6 +8,7 @@
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #endif
 
+#include <boost/core/null_deleter.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/slice.hpp>
@@ -92,10 +93,22 @@ namespace {
 	object LOG_DEBUG (tuple args, dict) { return log(log4cxx::Level::getDebug(), args); }
 	object LOG_TRACE (tuple args, dict) { return log(log4cxx::Level::getTrace(), args); }
 
-	log4cxx::LoggerPtr get_logger(std::string channel) { return log4cxx::Logger::getLogger(channel); }
-	log4cxx::LoggerPtr get_root_logger() { return log4cxx::Logger::getRootLogger(); }
-	log4cxx::LoggerPtr get_old_logger(log4cxx::LevelPtr level, std::string file, bool dual) {
-			return get_default_logger("PyLogging", level, file, dual);
+	log4cxx::LoggerPtr get_logger(std::string channel)
+	{
+		// don't try to delete it if Python holds the last reference (it's a singleton)
+		return log4cxx::LoggerPtr(&*log4cxx::Logger::getLogger(channel), boost::null_deleter());
+	}
+
+	log4cxx::LoggerPtr get_root_logger()
+	{
+		// cf. get_logger
+		return log4cxx::LoggerPtr(&*log4cxx::Logger::getRootLogger(), boost::null_deleter());
+	}
+
+	log4cxx::LoggerPtr get_old_logger(log4cxx::LevelPtr level, std::string file, bool dual)
+	{
+		// cf. get_logger
+		return log4cxx::LoggerPtr(&*get_default_logger("PyLogging", level, file, dual), boost::null_deleter());
 	}
 
 	size_t get_number_of_appenders(log4cxx::LoggerPtr logger) {
