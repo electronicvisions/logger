@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-#include "logger.h"
+#include "logger/log4cxx/logger.h"
 
 class LoggerTest : public ::testing::Test
 {

@@ -22,8 +22,8 @@
 
 #include <log4cxx/filter/levelrangefilter.h>
 
-#include "logging_ctrl.h"
-#include "logger.h"
+#include "logger/log4cxx/logging_ctrl.h"
+#include "logger/log4cxx/logger.h"
 #include "python_logging_appender.h"
 
 using namespace boost::python;

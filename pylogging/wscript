@@ -26,7 +26,7 @@ def build(bld):
             features = 'cxx cxxshlib pyext',
             source = 'pylogging.cpp python_logging_appender.cpp',
             export_includes = '.',
-            use = ['BOOST4PYLOGGING', 'logger_obj'],
+            use = ['BOOST4PYLOGGING', 'logger'],
     )
 
     bld.install_files(

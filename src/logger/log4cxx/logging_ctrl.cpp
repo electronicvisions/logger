@@ -1,4 +1,4 @@
-#include "logging_ctrl.h"
+#include "logger/log4cxx/logging_ctrl.h"
 
 #include <stdexcept>
 
@@ -10,7 +10,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "logger.h"
+#include "logger/log4cxx/logger.h"
 
 void logger_reset()
 {

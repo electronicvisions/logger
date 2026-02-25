@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from waflib import Errors, Logs
+from waflib.extras.gtest import summary
 import argparse, os
 
 def options(opt):
@@ -26,22 +27,26 @@ def configure(cfg):
     cfg.check_boost('system thread filesystem', uselib_store='BOOST4LOGGER')
     if getattr(cfg.options, 'enable_deprecated', False):
         Logs.pprint('PINK', "Using old-style logger (deprecated!)")
-        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('deprecated').abspath()
+        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('include').find_node('logger').find_node('deprecated').abspath()
     else:
         cfg.check_cxx(lib='log4cxx', uselib_store='LOG4CXX', mandatory=True)
-        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('log4cxx').abspath()
+        cfg.env.INCLUDES_LOGGER = cfg.path.find_node('include').find_node('logger').find_node('log4cxx').abspath()
 
     if cfg.options.disable_colorlog:
         cfg.env.DEFINES_LOGGER = [ 'CONFIG_NO_COLOR' ]
 
 def build(bld):
-    src_dir = bld.root.find_node(os.path.join(bld.env.INCLUDES_LOGGER))
+    bld(
+        target = 'logger_inc',
+        export_includes = 'include',
+    )
+
     bld.shlib(
         target          = 'logger',
-        name            = 'logger_obj',
-        source          = src_dir.ant_glob('*.cpp'),
+        source          = bld.path.ant_glob('src/logger/log4cxx/*.cpp'),
         export_includes = bld.env.INCLUDES_LOGGER,
         use             = [
+            'logger_inc',
             'LOGGER',
             'BOOST4LOGGER',
             'LOG4CXX',
@@ -51,10 +56,10 @@ def build(bld):
 
     bld.program(
         features     = 'gtest',
-        source       = bld.path.ant_glob('test/*.cpp'),
+        source       = bld.path.ant_glob('tests/*.cpp'),
         target       = 'test_logger',
         install_path = 'bin',
-        use          = ['logger_obj'],
+        use          = ['logger'],
     )
 
 
@@ -62,7 +67,8 @@ def build(bld):
         bld.program(
                 target = '%s' % os.path.splitext(program.relpath())[0],
                 source = [program],
-                use = ['logger_obj'],
+                use = ['logger'],
                 install_path = '${PREFIX}/bin',
         )
 
+    bld.add_post_fun(summary)

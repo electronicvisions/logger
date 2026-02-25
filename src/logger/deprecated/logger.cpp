@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "logger/deprecated/logger.h"
 #include <iostream>
 #include <stdexcept>
 

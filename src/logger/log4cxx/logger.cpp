@@ -8,7 +8,7 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include "logging_ctrl.h"
+#include "logger/log4cxx/logging_ctrl.h"
 #include <log4cxx/patternlayout.h>
 
 namespace visionary_logger {

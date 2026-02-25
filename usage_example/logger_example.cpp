@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "logger/log4cxx/logger.h"
 
 struct A : public LoggerMixin
 {
