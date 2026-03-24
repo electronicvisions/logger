@@ -3,9 +3,6 @@
 #include <sstream>
 #include <string>
 #include <utility>
-#include <boost/preprocessor/comparison/equal.hpp>
-#include <boost/preprocessor/control/if.hpp>
-#include <boost/preprocessor/variadic/size.hpp>
 
 
 namespace logger {
@@ -54,33 +51,13 @@ constexpr char const* prio_to_string(LogPriority prio)
 } // namespace detail
 
 /**
- * Syslog given log messages.
- *
- * Concatenates multiple arguments to one message.
- * @param args Log message. Can be [single, multiple] [string, stringstream].
- */
-template <logger::LogPriority Prio, typename... Args>
-void logger_syslog(Args&&... args)
-{
-	if constexpr (Prio <= prio_syslog_threshold && Prio != logger::LogPriority::NONE) {
-		std::stringstream msg;
-		(msg << ... << std::forward<Args>(args));
-
-		std::string msg_string = msg.str();
-		syslog(
-		    static_cast<int>(Prio), "[%s] %s", logger::detail::prio_to_string(Prio),
-		    msg_string.c_str());
-	}
-}
-
-/**
  * Macro for syslogging a message.
  *
  * Requires opening syslog beforehand and closing afterwards.
  * @param PRIO Log priority.
  * @param message Log message, which is streamed into a sstream.
  */
-#define LOGGER_SYSLOG_STREAM(PRIO, message)                                                        \
+#define LOGGER_SYSLOG(PRIO, message)                                                               \
 	do {                                                                                           \
 		if constexpr (                                                                             \
 		    logger::LogPriority::PRIO <= logger::prio_syslog_threshold &&                          \
@@ -94,30 +71,6 @@ void logger_syslog(Args&&... args)
 			    logger::detail::prio_to_string(logger::LogPriority::PRIO), msg_string.c_str());    \
 		}                                                                                          \
 	} while (0)
-
-/**
- * Macro for syslogging a message.
- *
- * Requires opening syslog beforehand and closing afterwards.
- * @param PRIO Log priority.
- * @param __VA_ARGS__ Log message. fprint-style arguments are expected.
- */
-#define LOGGER_SYSLOG_FORMAT(PRIO, ...)                                                            \
-	logger::logger_syslog<logger::LogPriority::PRIO>(__VA_ARGS__);
-
-/**
- * Macro for syslogging a message.
- *
- * Requires opening syslog beforehand and closing afterwards.
- * @param PRIO Log priority.
- * @param __VA_ARGS__ Log message. If one argument is given, it is streamed into a sstream.
- * Otherwise, fprint-style arguments are expected.
- */
-#define LOGGER_SYSLOG(PRIO, ...)                                                                   \
-	BOOST_PP_IF(                                                                                   \
-	    BOOST_PP_EQUAL(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), LOGGER_SYSLOG_STREAM,              \
-	    LOGGER_SYSLOG_FORMAT)                                                                      \
-	(PRIO, __VA_ARGS__)
 
 /**
  * Open syslog.
